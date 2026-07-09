@@ -2,9 +2,9 @@
   "status": "done",
   "current_phase": "setup",
   "last_agent": "claude-code",
-  "last_action": "note",
-  "last_summary": "Fixed package.json bin paths (npm was silently dropping bin entries with a leading ./ prefix during publish) via npm pkg fix",
-  "last_updated": "2026-07-09T23:24:53.076Z",
+  "last_action": "todo_done",
+  "last_summary": "Publish 0.1.0 to npm (npm publish --access public) once repo is pushed",
+  "last_updated": "2026-07-09T23:36:59.886Z",
   "engines_seen": [
     "ai-universal-memory",
     "claude-code"

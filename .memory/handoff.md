@@ -7,19 +7,17 @@
 
 - Status: done
 - Phase: setup
-- Last updated: 2026-07-09T23:24:53.076Z
+- Last updated: 2026-07-09T23:36:59.886Z
 - Last agent: claude-code
-- Last action: note
+- Last action: todo_done
 - Engines seen on this project: ai-universal-memory, claude-code
 
 ## Last Summary
 
-Fixed package.json bin paths (npm was silently dropping bin entries with a leading ./ prefix during publish) via npm pkg fix
+Publish 0.1.0 to npm (npm publish --access public) once repo is pushed
 
-## Pending Work (4)
+## Pending Work (2)
 
-- [ ] (mre3wgn9cfwr) Create the GitHub repo kinzart/ai-universal-memory and push
-- [ ] (mre3wgpz7kgm) Publish 0.1.0 to npm (npm publish --access public) once repo is pushed
 - [ ] (mre3wgs83gpu) Add more engine installers: Windsurf, Zed, JetBrains AI Assistant
 - [ ] (mre3wguf40lh) Consider aum search / snapshot diff commands
 
@@ -54,6 +52,9 @@ Fixed package.json bin paths (npm was silently dropping bin entries with a leadi
 {"time":"2026-07-09T22:56:53.321Z","agent":"claude-code","action":"todo","status":"done","summary":"Consider aum search / snapshot diff commands","next":[],"error":null}
 {"time":"2026-07-09T23:21:39.241Z","agent":"claude-code","action":"note","status":"done","summary":"Corrected GitHub username from placeholder kinzartmusica to actual authenticated account kinzart across package.json, LICENSE and .memory/","next":[],"error":null}
 {"time":"2026-07-09T23:24:53.076Z","agent":"claude-code","action":"note","status":"done","summary":"Fixed package.json bin paths (npm was silently dropping bin entries with a leading ./ prefix during publish) via npm pkg fix","next":[],"error":null}
+{"time":"2026-07-09T23:36:53.826Z","agent":"claude-code","action":"note","status":"done","summary":"Published ai-universal-memory@0.1.0 to npm and verified npx ai-universal-memory init works end-to-end from the public registry (fresh tmp dir, all doctor checks green).","next":[],"error":null}
+{"time":"2026-07-09T23:36:59.786Z","agent":"claude-code","action":"todo_done","status":"done","summary":"Create the GitHub repo kinzart/ai-universal-memory and push","next":[],"error":null}
+{"time":"2026-07-09T23:36:59.886Z","agent":"claude-code","action":"todo_done","status":"done","summary":"Publish 0.1.0 to npm (npm publish --access public) once repo is pushed","next":[],"error":null}
 ```
 
 ## Full History
