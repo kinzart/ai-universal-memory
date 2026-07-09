@@ -7,14 +7,14 @@
 
 - Status: done
 - Phase: setup
-- Last updated: 2026-07-09T23:36:59.886Z
+- Last updated: 2026-07-09T23:52:36.040Z
 - Last agent: claude-code
-- Last action: todo_done
+- Last action: validation
 - Engines seen on this project: ai-universal-memory, claude-code
 
 ## Last Summary
 
-Publish 0.1.0 to npm (npm publish --access public) once repo is pushed
+Real-world validation: installed on a second, unrelated project (Agente de Produção Artística) via npx from the public registry. First session logged real facts/risks/todos about that codebase; a completely fresh third session recalled all of it via the SessionStart hook + AGENTS.md/CLAUDE.md, with no re-exploration of the code. Confirms cross-session, low-token handoff works end-to-end in practice, not just in the smoke test.
 
 ## Pending Work (2)
 
@@ -55,6 +55,7 @@ Publish 0.1.0 to npm (npm publish --access public) once repo is pushed
 {"time":"2026-07-09T23:36:53.826Z","agent":"claude-code","action":"note","status":"done","summary":"Published ai-universal-memory@0.1.0 to npm and verified npx ai-universal-memory init works end-to-end from the public registry (fresh tmp dir, all doctor checks green).","next":[],"error":null}
 {"time":"2026-07-09T23:36:59.786Z","agent":"claude-code","action":"todo_done","status":"done","summary":"Create the GitHub repo kinzart/ai-universal-memory and push","next":[],"error":null}
 {"time":"2026-07-09T23:36:59.886Z","agent":"claude-code","action":"todo_done","status":"done","summary":"Publish 0.1.0 to npm (npm publish --access public) once repo is pushed","next":[],"error":null}
+{"time":"2026-07-09T23:52:36.040Z","agent":"claude-code","action":"validation","status":"done","summary":"Real-world validation: installed on a second, unrelated project (Agente de Produção Artística) via npx from the public registry. First session logged real facts/risks/todos about that codebase; a completely fresh third session recalled all of it via the SessionStart hook + AGENTS.md/CLAUDE.md, with no re-exploration of the code. Confirms cross-session, low-token handoff works end-to-end in practice, not just in the smoke test.","next":[],"error":null}
 ```
 
 ## Full History
