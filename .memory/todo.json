@@ -1,7 +1,7 @@
 [
   {
     "id": "mre3wgn9cfwr",
-    "text": "Create the GitHub repo kinzartmusica/ai-universal-memory and push",
+    "text": "Create the GitHub repo kinzart/ai-universal-memory and push",
     "done": false,
     "agent": "claude-code",
     "created_at": "2026-07-09T22:56:53.061Z",

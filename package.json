@@ -35,15 +35,15 @@
     "ai-agents",
     "context-engineering"
   ],
-  "author": "kinzartmusica",
+  "author": "kinzart",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kinzartmusica/ai-universal-memory.git"
+    "url": "git+https://github.com/kinzart/ai-universal-memory.git"
   },
-  "homepage": "https://github.com/kinzartmusica/ai-universal-memory#readme",
+  "homepage": "https://github.com/kinzart/ai-universal-memory#readme",
   "bugs": {
-    "url": "https://github.com/kinzartmusica/ai-universal-memory/issues"
+    "url": "https://github.com/kinzart/ai-universal-memory/issues"
   },
   "engines": {
     "node": ">=18"
