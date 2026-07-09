@@ -1,0 +1,12 @@
+{
+  "status": "done",
+  "current_phase": "setup",
+  "last_agent": "claude-code",
+  "last_action": "todo",
+  "last_summary": "Consider aum search / snapshot diff commands",
+  "last_updated": "2026-07-09T22:56:53.321Z",
+  "engines_seen": [
+    "ai-universal-memory",
+    "claude-code"
+  ]
+}

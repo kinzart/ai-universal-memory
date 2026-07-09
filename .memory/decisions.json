@@ -1,0 +1,20 @@
+[
+  {
+    "id": "mre3wgcz845k",
+    "text": "Vendor the engine into .memory/tools/ of every target project (not just depend on the npm package), so memory keeps working offline and forever, even without ai-universal-memory installed.",
+    "agent": "claude-code",
+    "created_at": "2026-07-09T22:56:52.691Z"
+  },
+  {
+    "id": "mre3wgfhrk4x",
+    "text": "Automatic context injection uses a capped ~900 char BRIEF.md via a Claude Code SessionStart hook, not the full history, to keep token cost near zero on every session start.",
+    "agent": "claude-code",
+    "created_at": "2026-07-09T22:56:52.781Z"
+  },
+  {
+    "id": "mre3wgi6hnok",
+    "text": "AGENTS.md/CLAUDE.md/.claude/settings.json are merged via marker comments / JSON merge, never overwritten, so existing project instructions and hooks survive re-installs.",
+    "agent": "claude-code",
+    "created_at": "2026-07-09T22:56:52.878Z"
+  }
+]

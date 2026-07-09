@@ -1,0 +1,54 @@
+{
+  "name": "ai-universal-memory",
+  "version": "0.1.0",
+  "description": "Portable, zero-dependency project memory for any AI coding engine (Claude Code, Cursor, ChatGPT, Gemini, ...) or human — handoff, decisions, facts and state that survive across sessions and engines.",
+  "type": "module",
+  "main": "src/core.js",
+  "bin": {
+    "aum": "./bin/aum.js",
+    "ai-universal-memory": "./bin/aum.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "templates",
+    "mcp",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "test": "node test/run.js",
+    "mcp": "node bin/aum.js mcp"
+  },
+  "keywords": [
+    "ai",
+    "memory",
+    "agent-memory",
+    "claude-code",
+    "claude",
+    "mcp",
+    "model-context-protocol",
+    "cursor",
+    "handoff",
+    "project-memory",
+    "ai-agents",
+    "context-engineering"
+  ],
+  "author": "kinzartmusica",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kinzartmusica/ai-universal-memory.git"
+  },
+  "homepage": "https://github.com/kinzartmusica/ai-universal-memory#readme",
+  "bugs": {
+    "url": "https://github.com/kinzartmusica/ai-universal-memory/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

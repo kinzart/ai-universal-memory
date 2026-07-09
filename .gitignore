@@ -1,0 +1,9 @@
+node_modules/
+npm-debug.log*
+.DS_Store
+Thumbs.db
+*.log
+
+# Local scratch space some editors create — not the project's .memory/,
+# which IS meant to be committed (that's the whole point of this project).
+.memory/snapshots/*.tmp

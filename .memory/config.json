@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "project_name": "AI Universal Memory",
+  "created_at": "2026-07-09T22:56:38.939Z",
+  "brief_max_chars": 900,
+  "brief_max_events": 5,
+  "brief_max_pending": 5,
+  "brief_max_risks": 3
+}

@@ -1,0 +1,21 @@
+<!-- ai-universal-memory:start -->
+## Project memory (AI Universal Memory)
+
+This project persists memory in `.memory/` — state, decisions, pending
+tasks, risks and facts that survive across sessions, AI engines, and
+humans. **Read `.memory/BRIEF.md` before doing anything else** (it's
+short, cheap to read). Go deeper into `.memory/handoff.md` or
+`.memory/events.jsonl` only if you need more context.
+
+After doing meaningful work, log it:
+
+```bash
+node .memory/tools/cli.mjs log "what you did" --agent "<your-name>"
+node .memory/tools/cli.mjs decision "decision taken" --agent "<your-name>"
+node .memory/tools/cli.mjs todo "what's left" --agent "<your-name>"
+node .memory/tools/cli.mjs handoff
+```
+
+Full docs: `.memory/README.md`. Rule: the AI does not remember, the
+project remembers.
+<!-- ai-universal-memory:end -->

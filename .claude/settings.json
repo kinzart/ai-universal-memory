@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:/APPS E PROGRAMAS/UNIVERSAL MEMORY FOR AI/.memory/tools/session-start.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}

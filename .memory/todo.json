@@ -1,0 +1,34 @@
+[
+  {
+    "id": "mre3wgn9cfwr",
+    "text": "Create the GitHub repo kinzartmusica/ai-universal-memory and push",
+    "done": false,
+    "agent": "claude-code",
+    "created_at": "2026-07-09T22:56:53.061Z",
+    "done_at": null
+  },
+  {
+    "id": "mre3wgpz7kgm",
+    "text": "Publish 0.1.0 to npm (npm publish --access public) once repo is pushed",
+    "done": false,
+    "agent": "claude-code",
+    "created_at": "2026-07-09T22:56:53.159Z",
+    "done_at": null
+  },
+  {
+    "id": "mre3wgs83gpu",
+    "text": "Add more engine installers: Windsurf, Zed, JetBrains AI Assistant",
+    "done": false,
+    "agent": "claude-code",
+    "created_at": "2026-07-09T22:56:53.240Z",
+    "done_at": null
+  },
+  {
+    "id": "mre3wguf40lh",
+    "text": "Consider aum search / snapshot diff commands",
+    "done": false,
+    "agent": "claude-code",
+    "created_at": "2026-07-09T22:56:53.319Z",
+    "done_at": null
+  }
+]

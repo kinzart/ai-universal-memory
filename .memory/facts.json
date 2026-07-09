@@ -1,0 +1,14 @@
+{
+  "confirmed": [
+    {
+      "id": "mre3wgks2xui",
+      "fact": "npm package name 'ai-universal-memory' was unclaimed as of 2026-07-09.",
+      "source": "npm view ai-universal-memory (404)",
+      "confidence": 0.5,
+      "agent": "claude-code",
+      "created_at": "2026-07-09T22:56:52.972Z"
+    }
+  ],
+  "probable": [],
+  "needs_validation": []
+}
