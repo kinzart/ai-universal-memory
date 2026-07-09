@@ -7,14 +7,14 @@
 
 - Status: done
 - Phase: setup
-- Last updated: 2026-07-09T23:21:39.241Z
+- Last updated: 2026-07-09T23:24:53.076Z
 - Last agent: claude-code
 - Last action: note
 - Engines seen on this project: ai-universal-memory, claude-code
 
 ## Last Summary
 
-Corrected GitHub username from placeholder kinzartmusica to actual authenticated account kinzart across package.json, LICENSE and .memory/
+Fixed package.json bin paths (npm was silently dropping bin entries with a leading ./ prefix during publish) via npm pkg fix
 
 ## Pending Work (4)
 
@@ -53,6 +53,7 @@ Corrected GitHub username from placeholder kinzartmusica to actual authenticated
 {"time":"2026-07-09T22:56:53.241Z","agent":"claude-code","action":"todo","status":"done","summary":"Add more engine installers: Windsurf, Zed, JetBrains AI Assistant","next":[],"error":null}
 {"time":"2026-07-09T22:56:53.321Z","agent":"claude-code","action":"todo","status":"done","summary":"Consider aum search / snapshot diff commands","next":[],"error":null}
 {"time":"2026-07-09T23:21:39.241Z","agent":"claude-code","action":"note","status":"done","summary":"Corrected GitHub username from placeholder kinzartmusica to actual authenticated account kinzart across package.json, LICENSE and .memory/","next":[],"error":null}
+{"time":"2026-07-09T23:24:53.076Z","agent":"claude-code","action":"note","status":"done","summary":"Fixed package.json bin paths (npm was silently dropping bin entries with a leading ./ prefix during publish) via npm pkg fix","next":[],"error":null}
 ```
 
 ## Full History

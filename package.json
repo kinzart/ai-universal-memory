@@ -5,8 +5,8 @@
   "type": "module",
   "main": "src/core.js",
   "bin": {
-    "aum": "./bin/aum.js",
-    "ai-universal-memory": "./bin/aum.js"
+    "aum": "bin/aum.js",
+    "ai-universal-memory": "bin/aum.js"
   },
   "files": [
     "bin",

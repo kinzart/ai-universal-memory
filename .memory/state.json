@@ -3,8 +3,8 @@
   "current_phase": "setup",
   "last_agent": "claude-code",
   "last_action": "note",
-  "last_summary": "Corrected GitHub username from placeholder kinzartmusica to actual authenticated account kinzart across package.json, LICENSE and .memory/",
-  "last_updated": "2026-07-09T23:21:39.241Z",
+  "last_summary": "Fixed package.json bin paths (npm was silently dropping bin entries with a leading ./ prefix during publish) via npm pkg fix",
+  "last_updated": "2026-07-09T23:24:53.076Z",
   "engines_seen": [
     "ai-universal-memory",
     "claude-code"
