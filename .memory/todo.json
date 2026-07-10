@@ -34,9 +34,9 @@
   {
     "id": "mre6io8e79f8",
     "text": "Add more engine installers: Windsurf, Zed, JetBrains AI Assistant",
-    "done": false,
+    "done": true,
     "agent": "unknown",
     "created_at": "2026-07-10T00:10:08.558Z",
-    "done_at": null
+    "done_at": "2026-07-10T00:10:31.949Z"
   }
 ]

@@ -7,20 +7,19 @@
 
 - Status: done
 - Phase: setup
-- Last updated: 2026-07-10T00:10:08.651Z
+- Last updated: 2026-07-10T00:10:32.052Z
 - Last agent: claude-code
-- Last action: release
+- Last action: note
 - Engines seen on this project: ai-universal-memory, claude-code
 
 ## Last Summary
 
-Published and verified ai-universal-memory@0.2.0 end-to-end from the public npm registry: fresh npx install auto-scans a synthetic project and correctly seeds package/README/structure/git facts with no manual logging needed.
+Closed duplicate todo mre6io8e79f8 (accidental re-add) — original is mre3wgs83gpu, still open.
 
-## Pending Work (3)
+## Pending Work (2)
 
 - [ ] (mre3wgs83gpu) Add more engine installers: Windsurf, Zed, JetBrains AI Assistant
 - [ ] (mre3wguf40lh) Consider aum search / snapshot diff commands
-- [ ] (mre6io8e79f8) Add more engine installers: Windsurf, Zed, JetBrains AI Assistant
 
 ## Open Risks (0)
 
@@ -41,8 +40,6 @@ Published and verified ai-universal-memory@0.2.0 end-to-end from the public npm 
 ## Latest Events
 
 ```jsonl
-{"time":"2026-07-09T22:56:38.943Z","agent":"ai-universal-memory","action":"init","status":"done","summary":"Project memory initialized.","next":[],"error":null}
-{"time":"2026-07-09T22:56:52.599Z","agent":"claude-code","action":"note","status":"done","summary":"Built the full project: vendored zero-dep engine, CLI, Claude Code SessionStart hook, AGENTS.md/CLAUDE.md installers, Cursor rule, optional MCP server, smoke tests, CI.","next":[],"error":null}
 {"time":"2026-07-09T22:56:52.693Z","agent":"claude-code","action":"decision","status":"done","summary":"Vendor the engine into .memory/tools/ of every target project (not just depend on the npm package), so memory keeps working offline and forever, even without ai-universal-memory installed.","next":[],"error":null}
 {"time":"2026-07-09T22:56:52.782Z","agent":"claude-code","action":"decision","status":"done","summary":"Automatic context injection uses a capped ~900 char BRIEF.md via a Claude Code SessionStart hook, not the full history, to keep token cost near zero on every session start.","next":[],"error":null}
 {"time":"2026-07-09T22:56:52.881Z","agent":"claude-code","action":"decision","status":"done","summary":"AGENTS.md/CLAUDE.md/.claude/settings.json are merged via marker comments / JSON merge, never overwritten, so existing project instructions and hooks survive re-installs.","next":[],"error":null}
@@ -61,6 +58,8 @@ Published and verified ai-universal-memory@0.2.0 end-to-end from the public npm 
 {"time":"2026-07-10T00:04:48.295Z","agent":"claude-code","action":"decision","status":"done","summary":"Keep bootstrap.mjs package-only (not vendored into target projects) since only 'aum init' calls it and the vendored local CLI has no init command — avoids adding unused code to every project's .memory/tools/.","next":[],"error":null}
 {"time":"2026-07-10T00:10:08.559Z","agent":"unknown","action":"todo","status":"done","summary":"Add more engine installers: Windsurf, Zed, JetBrains AI Assistant","next":[],"error":null}
 {"time":"2026-07-10T00:10:08.651Z","agent":"claude-code","action":"release","status":"done","summary":"Published and verified ai-universal-memory@0.2.0 end-to-end from the public npm registry: fresh npx install auto-scans a synthetic project and correctly seeds package/README/structure/git facts with no manual logging needed.","next":[],"error":null}
+{"time":"2026-07-10T00:10:31.951Z","agent":"claude-code","action":"todo_done","status":"done","summary":"Add more engine installers: Windsurf, Zed, JetBrains AI Assistant","next":[],"error":null}
+{"time":"2026-07-10T00:10:32.052Z","agent":"claude-code","action":"note","status":"done","summary":"Closed duplicate todo mre6io8e79f8 (accidental re-add) — original is mre3wgs83gpu, still open.","next":[],"error":null}
 ```
 
 ## Full History
