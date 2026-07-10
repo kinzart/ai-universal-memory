@@ -80,6 +80,22 @@ pending items, top risks, last few events. Full history
 (`events.jsonl`, `handoff.md`) is always available but never force-fed —
 an agent reads it only when it decides it actually needs more depth.
 
+### Memory is never empty on day one
+
+`aum init` also runs a one-time, local-only project scan the first time
+it runs: root `package.json` (name, version, description, scripts),
+a summary of `README.md`, the top-level directory layout, a flag if there
+are multiple `package.json` files (possible monorepo/duplicate app
+roots), and a git status check — including catching a `.git` folder that
+exists but isn't actually a valid, initialized repository. These become
+real `facts`/`risks`/`todos`, not placeholders. Nothing leaves your
+machine and nothing is read over the network. Skip it with
+`aum init --no-scan`.
+
+This exists because an empty memory and no memory look the same to a
+fresh AI session: both mean "explore the codebase from scratch." The
+scan makes sure day one already has something worth handing off.
+
 ### Why it survives without this package
 
 `aum init` doesn't just point your project at a dependency — it
@@ -112,7 +128,7 @@ engine" part.
 ## CLI (this package)
 
 ```bash
-npx ai-universal-memory init [--engines claude,agents,cursor] [--name "My Project"]
+npx ai-universal-memory init [--engines claude,agents,cursor] [--name "My Project"] [--no-scan]
 npx ai-universal-memory install [--engines claude,agents,cursor]   # re-sync integrations only
 npx ai-universal-memory doctor [--fix]                              # check what's wired up
 npx ai-universal-memory brief | read | context

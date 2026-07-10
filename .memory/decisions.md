@@ -17,3 +17,9 @@ _by claude-code_
 AGENTS.md/CLAUDE.md/.claude/settings.json are merged via marker comments / JSON merge, never overwritten, so existing project instructions and hooks survive re-installs.
 
 _by claude-code_
+
+## 2026-07-10T00:04:48.293Z
+
+Keep bootstrap.mjs package-only (not vendored into target projects) since only 'aum init' calls it and the vendored local CLI has no init command — avoids adding unused code to every project's .memory/tools/.
+
+_by claude-code_

@@ -2,9 +2,9 @@
   "status": "done",
   "current_phase": "setup",
   "last_agent": "claude-code",
-  "last_action": "validation",
-  "last_summary": "Real-world validation: installed on a second, unrelated project (Agente de Produção Artística) via npx from the public registry. First session logged real facts/risks/todos about that codebase; a completely fresh third session recalled all of it via the SessionStart hook + AGENTS.md/CLAUDE.md, with no re-exploration of the code. Confirms cross-session, low-token handoff works end-to-end in practice, not just in the smoke test.",
-  "last_updated": "2026-07-09T23:52:36.040Z",
+  "last_action": "decision",
+  "last_summary": "Keep bootstrap.mjs package-only (not vendored into target projects) since only 'aum init' calls it and the vendored local CLI has no init command — avoids adding unused code to every project's .memory/tools/.",
+  "last_updated": "2026-07-10T00:04:48.295Z",
   "engines_seen": [
     "ai-universal-memory",
     "claude-code"

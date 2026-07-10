@@ -1,6 +1,6 @@
 {
   "name": "ai-universal-memory",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Portable, zero-dependency project memory for any AI coding engine (Claude Code, Cursor, ChatGPT, Gemini, ...) or human — handoff, decisions, facts and state that survive across sessions and engines.",
   "type": "module",
   "main": "src/core.js",

@@ -12,6 +12,7 @@ import {
   installAll,
   doctor as runDoctor
 } from "../src/installers.js";
+import { runBootstrap } from "../templates/bootstrap.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -69,8 +70,11 @@ Portable project memory for any AI engine or human. Zero-dependency data
 layer, vendored into every project so it keeps working without this
 package installed.
 
-  npx ai-universal-memory init [--engines claude,agents,cursor] [--name X]
+  npx ai-universal-memory init [--engines claude,agents,cursor] [--name X] [--no-scan]
       Create .memory/ and wire up the requested engines. Safe to re-run.
+      On first init, also scans the project (package.json, README, top-level
+      structure, git status — all local, no network) and seeds real facts
+      so the memory isn't empty on day one. Use --no-scan to skip that.
 
   npx ai-universal-memory install [--engines claude,agents,cursor]
       (Re)install engine integrations without touching existing data.
@@ -115,9 +119,21 @@ async function main() {
     const memory = new ProjectMemory(root);
     const alreadyInitialized = memory.isInitialized();
     memory.init({ projectName: flag("--name") });
+
+    let scanned = false;
+    if (!alreadyInitialized && !hasFlag("--no-scan")) {
+      try {
+        runBootstrap(memory, root);
+        scanned = true;
+      } catch (err) {
+        console.error(`(non-fatal) project scan failed: ${err && err.message ? err.message : err}`);
+      }
+    }
+
     const results = installAll(root, { engines: parseEngines() });
     console.log(`${alreadyInitialized ? "Memory already existed — re-synced" : "Memory initialized"} in ${path.join(root, ".memory")}`);
     console.log("Installed:", Object.keys(results).filter(k => results[k]).join(", "));
+    if (scanned) console.log("Scanned the project (package.json, README, structure, git) and seeded initial facts — see: npx ai-universal-memory read");
     console.log("\nNext: open this project in Claude Code — memory loads automatically.");
     console.log("Or run: npx ai-universal-memory read");
     return;
