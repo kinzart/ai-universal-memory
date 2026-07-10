@@ -1,18 +1,21 @@
 <!-- ai-universal-memory:start -->
 ## Project memory (AI Universal Memory)
 
-This project persists memory in `.memory/`. A short digest from
-`.memory/BRIEF.md` is injected automatically at the start of every
-session via a `SessionStart` hook — you should already have it above.
-If it's missing, or you need more depth, read in this order and stop as
-soon as you have enough:
+This project persists memory in `.memory/`, read via progressive
+disclosure — read Layer 1 always, escalate only if you need to:
 
-1. `.memory/BRIEF.md`
-2. `.memory/handoff.md`
-3. `.memory/events.jsonl` (tail only, only if you need deep history)
+- **Layer 1 — `.memory/BRIEF.md`.** Injected automatically at the start
+  of every session via a `SessionStart` hook — you should already have
+  it above. Cheap, always current.
+- **Layer 2 — `.memory/handoff.md`.** Full current state. Read on demand
+  if Layer 1 isn't enough.
+- **Layer 3 — `.memory/events.jsonl`.** Full history. Read (or
+  `node .memory/tools/cli.mjs search "term"`) only if you need deep
+  context.
 
-After meaningful work, log it so the next session (any engine, any
-human) picks up correctly:
+Routine edits (`Write`/`Edit`/`Bash`) are auto-captured by `PostToolUse`/
+`Stop` hooks — no LLM, one line per action, one summary per turn. That
+does **not** replace logging meaningful work yourself:
 
 ```bash
 node .memory/tools/cli.mjs log "what you did" --agent "claude-code"

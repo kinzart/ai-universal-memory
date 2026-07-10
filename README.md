@@ -61,6 +61,25 @@ That's the gap this project fills.
 | Token cost per session        | whole file             | per call             | per call               | ~150–220 tokens, fixed   |
 | Survives without the package  | ✅                     | ❌                  | ❌                    | ✅ (vendored engine)     |
 
+## claude-mem vs this
+
+[claude-mem](https://github.com/thedotmack/claude-mem) is excellent at
+what it does: automatic, AI-compressed memory for *you*, on *your*
+machine. This project solves a different problem: memory that belongs
+to the *project* and travels with it. They can coexist in the same
+setup.
+
+|                                  | claude-mem                           | ai-universal-memory                 |
+|----------------------------------|---------------------------------------|--------------------------------------|
+| Where memory lives               | SQLite in `~/.claude-mem/`            | `.memory/` inside the repo, in git  |
+| Travels to a teammate on clone?  | No — their instance starts empty      | Yes — `git clone` ships the memory  |
+| Auditable in a PR diff?          | No (database + vectors)               | Yes (readable markdown/json)        |
+| Stack                            | Node 20+, Bun, Chroma, worker daemon  | Zero dependencies, plain files      |
+| Survives uninstall?              | No                                    | Yes — vendored engine               |
+| Capture cost                     | LLM calls to compress                 | Zero tokens by construction         |
+| Semantic (vector) search         | Yes                                   | No — plain-text `aum search`        |
+| Automatic capture                | Yes (lifecycle hooks)                 | Yes (PostToolUse/Stop, no LLM)      |
+
 ## How it works
 
 `npx ai-universal-memory init` creates:
@@ -78,6 +97,8 @@ That's the gap this project fills.
   tools/engine.mjs            ← the zero-dependency engine itself, vendored
   tools/cli.mjs                 ← local CLI — works with no internet, no npm
   tools/session-start.mjs         ← Claude Code auto-read hook target
+  tools/auto-capture.mjs            ← PostToolUse hook: 1 line per tool call, no LLM
+  tools/session-stop.mjs              ← Stop hook: consolidates the turn once
 ```
 
 Plus, non-destructively (existing content is preserved, merged via marker
@@ -87,17 +108,52 @@ comments):
   `.memory/BRIEF.md` first.
 - `.claude/skills/ai-universal-memory/SKILL.md` — a Claude Code Skill.
 - `.claude/settings.json` — a `SessionStart` hook so **Claude Code reads
-  the brief automatically, every session, without being asked**.
+  the brief automatically, every session, without being asked** — plus
+  `PostToolUse`/`Stop` hooks for zero-discipline auto-capture (below).
 - `.cursor/rules/ai-universal-memory.mdc` — same idea for Cursor.
 
-### Why this never burns tokens
+### Progressive disclosure: three layers
 
-The only thing read *automatically* is `BRIEF.md` — capped at ~900
-characters (roughly 150–220 tokens, configurable via
-`.memory/config.json`'s `brief_max_chars`): current status, last
-summary, top pending items, top risks, last few events. Full history
-(`events.jsonl`, `handoff.md`) is always available but never force-fed —
-an agent reads it only when it decides it actually needs more depth.
+Nothing is read automatically beyond a fixed, small budget — going
+deeper is always the agent's choice, never forced:
+
+- **Layer 1 — `BRIEF.md`.** ~150–220 tokens (capped at ~900 characters,
+  configurable via `.memory/config.json`'s `brief_max_chars`), injected
+  automatically on every session start. Current status, last real
+  summary, top pending items, top risks, last few non-noise events.
+- **Layer 2 — `handoff.md`.** Full current state — pending work, open
+  risks, confirmed/probable/needs-validation facts, recent raw events.
+  Read on demand when Layer 1 isn't enough.
+- **Layer 3 — `events.jsonl`.** The complete append-only history. Read
+  only when the agent decides it actually needs deep context — via
+  `aum search` for a specific term, or the tail of the file directly.
+
+Read Layer 1 always; escalate to Layer 2 or 3 only if you need to.
+
+### Automatic capture, without an LLM
+
+The biggest risk to any memory system is the agent forgetting to
+update it. `aum init` wires two more hooks by default (Claude Code
+only, for now):
+
+- **`PostToolUse`** appends one compact line per `Write`/`Edit`/
+  `MultiEdit`/`NotebookEdit`/`Bash` call to `events.jsonl` — no LLM
+  call, no lock, no state write, designed to cost ~0ms. Repeated edits
+  to the same file collapse into one line instead of spamming the log.
+- **`Stop`** runs once per turn: if the turn produced auto-captured
+  events, it writes one human-readable summary ("Session abc123: 14
+  actions across 5 files — a.js, b.php, …") and regenerates `BRIEF.md`/
+  `handoff.md` exactly once, instead of on every single edit.
+
+Auto-captured events stay out of `BRIEF.md`'s `Recent:` line (that's
+the Stop-hook summary's job) but remain fully auditable in
+`events.jsonl` and `handoff.md`. One line per action, one summary per
+turn, all of it plain text in your git history — no LLM calls, no
+compression, no vector store.
+
+Turn it off per-project with `aum init --no-auto-capture`, or any time
+with `aum auto off` / `aum auto on` / `aum auto status` (also available
+as `node .memory/tools/cli.mjs auto ...` without the package installed).
 
 ### Memory is never empty on day one
 
@@ -147,13 +203,14 @@ engine" part.
 ## CLI (this package)
 
 ```bash
-npx ai-universal-memory init [--engines claude,agents,cursor] [--name "My Project"] [--no-scan]
-npx ai-universal-memory install [--engines claude,agents,cursor]   # re-sync integrations only
+npx ai-universal-memory init [--engines claude,agents,cursor] [--name "My Project"] [--no-scan] [--no-auto-capture]
+npx ai-universal-memory install [--engines claude,agents,cursor] [--no-auto-capture]   # re-sync integrations only
 npx ai-universal-memory doctor [--fix]                              # check what's wired up
 npx ai-universal-memory brief | read | context
 npx ai-universal-memory log | decision | todo | todo-done | risk | risk-resolve | fact | handoff | last
 npx ai-universal-memory search "term" [--limit 25]                   # search events/facts/decisions/todos/risks
 npx ai-universal-memory compact [--keep 200]                          # rotate old events into .memory/snapshots/
+npx ai-universal-memory auto on|off|status                            # toggle zero-LLM auto-capture
 npx ai-universal-memory mcp                                          # optional MCP server
 ```
 
@@ -193,10 +250,10 @@ rm -rf .memory .claude/skills/ai-universal-memory .cursor/rules/ai-universal-mem
 
 Then remove the two marked blocks (between `<!-- ai-universal-memory:start -->`
 and `<!-- ai-universal-memory:end -->`) from `AGENTS.md` and `CLAUDE.md`
-if you added them, and the `SessionStart` hook entry from
-`.claude/settings.json` (the one whose command mentions
-`session-start.mjs`) if you no longer want it. Nothing else on your
-system was touched.
+if you added them, and the `SessionStart`/`PostToolUse`/`Stop` hook
+entries from `.claude/settings.json` (the ones whose commands mention
+`session-start.mjs`, `auto-capture.mjs`, or `session-stop.mjs`) if you
+no longer want them. Nothing else on your system was touched.
 
 ## Roadmap
 

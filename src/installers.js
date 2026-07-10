@@ -67,12 +67,12 @@ export function mergeBlock(filePath, block) {
   return filePath;
 }
 
-/** Vendor the zero-dependency engine + CLI + hook into <target>/.memory/tools/ */
+/** Vendor the zero-dependency engine + CLI + hooks into <target>/.memory/tools/ */
 export function vendorEngine(targetRoot) {
   const toolsDir = path.join(targetRoot, ".memory", "tools");
   ensureDir(toolsDir);
 
-  for (const file of ["engine.mjs", "cli.mjs", "session-start.mjs"]) {
+  for (const file of ["engine.mjs", "cli.mjs", "session-start.mjs", "auto-capture.mjs", "session-stop.mjs"]) {
     fs.copyFileSync(path.join(TEMPLATES, file), path.join(toolsDir, file));
   }
 
@@ -152,7 +152,41 @@ export function installClaudeHook(targetRoot) {
   return settingsPath;
 }
 
-export function installAll(targetRoot, { engines = ["claude", "agents", "cursor"] } = {}) {
+/** Merge PostToolUse + Stop hooks for zero-discipline auto-capture. */
+export function installAutoCapture(targetRoot) {
+  const settingsPath = path.join(targetRoot, ".claude", "settings.json");
+  const settings = readJson(settingsPath, {});
+  settings.hooks = settings.hooks || {};
+
+  const ensure = (eventName, matcher, script) => {
+    settings.hooks[eventName] = settings.hooks[eventName] || [];
+    const command = `node "$CLAUDE_PROJECT_DIR/.memory/tools/${script}"`;
+    const marker = `.memory/tools/${script}`;
+    let found = false;
+    for (const group of settings.hooks[eventName]) {
+      for (const h of group.hooks || []) {
+        if (typeof h.command === "string" && h.command.includes(marker)) {
+          h.command = command;
+          found = true;
+        }
+      }
+    }
+    if (!found) {
+      const group = matcher
+        ? { matcher, hooks: [{ type: "command", command }] }
+        : { hooks: [{ type: "command", command }] };
+      settings.hooks[eventName].push(group);
+    }
+  };
+
+  ensure("PostToolUse", "Write|Edit|MultiEdit|NotebookEdit|Bash", "auto-capture.mjs");
+  ensure("Stop", null, "session-stop.mjs");
+
+  writeJson(settingsPath, settings);
+  return settingsPath;
+}
+
+export function installAll(targetRoot, { engines = ["claude", "agents", "cursor"], autoCapture = true } = {}) {
   const results = {};
   vendorEngine(targetRoot);
   results.vendored = true;
@@ -161,6 +195,9 @@ export function installAll(targetRoot, { engines = ["claude", "agents", "cursor"
     results.skill = installSkill(targetRoot);
     results.claudeMd = installClaudeMd(targetRoot);
     results.claudeHook = installClaudeHook(targetRoot);
+    if (autoCapture) {
+      results.autoCapture = installAutoCapture(targetRoot);
+    }
   }
   if (engines.includes("agents")) {
     results.agentsMd = installAgentsMd(targetRoot);
@@ -182,6 +219,8 @@ export function doctor(targetRoot) {
   checks.push({ name: ".memory/tools/engine.mjs (vendored)", ok: exists(path.join(memoryDir, "tools", "engine.mjs")) });
   checks.push({ name: ".memory/tools/cli.mjs (vendored)", ok: exists(path.join(memoryDir, "tools", "cli.mjs")) });
   checks.push({ name: ".memory/tools/session-start.mjs (vendored)", ok: exists(path.join(memoryDir, "tools", "session-start.mjs")) });
+  checks.push({ name: ".memory/tools/auto-capture.mjs (vendored)", ok: exists(path.join(memoryDir, "tools", "auto-capture.mjs")) });
+  checks.push({ name: ".memory/tools/session-stop.mjs (vendored)", ok: exists(path.join(memoryDir, "tools", "session-stop.mjs")) });
 
   const claudeMd = readText(path.join(targetRoot, "CLAUDE.md"));
   checks.push({ name: "CLAUDE.md has memory block", ok: claudeMd.includes(BLOCK_START) });
@@ -200,6 +239,26 @@ export function doctor(targetRoot) {
   checks.push({
     name: "SessionStart hook is portable ($CLAUDE_PROJECT_DIR, no absolute path)",
     ok: hookCmd.includes("$CLAUDE_PROJECT_DIR")
+  });
+
+  const findHookCmd = (eventName, marker) =>
+    ((settings.hooks || {})[eventName] || [])
+      .flatMap(g => g.hooks || [])
+      .map(h => h.command || "")
+      .find(c => c.includes(marker)) || "";
+
+  const postToolUseCmd = findHookCmd("PostToolUse", "auto-capture.mjs");
+  checks.push({ name: ".claude/settings.json PostToolUse auto-capture hook", ok: Boolean(postToolUseCmd) });
+  checks.push({
+    name: "PostToolUse hook is portable ($CLAUDE_PROJECT_DIR, no absolute path)",
+    ok: postToolUseCmd.includes("$CLAUDE_PROJECT_DIR")
+  });
+
+  const stopCmd = findHookCmd("Stop", "session-stop.mjs");
+  checks.push({ name: ".claude/settings.json Stop session-consolidation hook", ok: Boolean(stopCmd) });
+  checks.push({
+    name: "Stop hook is portable ($CLAUDE_PROJECT_DIR, no absolute path)",
+    ok: stopCmd.includes("$CLAUDE_PROJECT_DIR")
   });
 
   checks.push({ name: ".cursor/rules/ai-universal-memory.mdc", ok: exists(path.join(targetRoot, ".cursor", "rules", "ai-universal-memory.mdc")) });

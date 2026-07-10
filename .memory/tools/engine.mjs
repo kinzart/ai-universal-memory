@@ -152,7 +152,8 @@ export class ProjectMemory {
       brief_max_chars: 900,
       brief_max_events: 5,
       brief_max_pending: 5,
-      brief_max_risks: 3
+      brief_max_risks: 3,
+      auto_capture: true
     });
   }
 
@@ -174,7 +175,8 @@ export class ProjectMemory {
           brief_max_chars: 900,
           brief_max_events: 5,
           brief_max_pending: 5,
-          brief_max_risks: 3
+          brief_max_risks: 3,
+          auto_capture: true
         });
       }
 
@@ -269,6 +271,24 @@ export class ProjectMemory {
       writeJson(this.stateFile, { ...state, current_phase: phase, last_updated: new Date().toISOString() });
       this._regenerateDerived();
     });
+  }
+
+  // Fast append for auto-capture: events.jsonl only. Small single-line
+  // appendFileSync writes are atomic on POSIX — deliberately no lock, no
+  // state.json touch, no derived regeneration here. Designed to cost
+  // ~0ms and never block the agent on every tool call. Turn-level
+  // consolidation happens once, via regenerate() from the Stop hook.
+  appendEvent(event) {
+    ensureDir(this.dir);
+    fs.appendFileSync(this.eventsFile, JSON.stringify(event) + "\n", "utf8");
+    return event;
+  }
+
+  // Public, locked regeneration of BRIEF.md + handoff.md — for callers
+  // (like the Stop hook) that need to refresh the derived views without
+  // going through log()/_logUnlocked.
+  regenerate() {
+    return withLock(this.dir, () => this._regenerateDerived());
   }
 
   lastEvents(limit = 30) {
@@ -490,7 +510,11 @@ ${facts.confirmed.map(f => `- ${f.fact}`).join("\n") || "- No confirmed facts."}
     const state = readJson(this.stateFile, {});
     const todos = readJson(this.todoJsonFile, []).filter(t => !t.done).slice(0, cfg.brief_max_pending);
     const risks = readJson(this.risksJsonFile, []).filter(r => !r.resolved).slice(0, cfg.brief_max_risks);
-    const events = this.lastEvents(cfg.brief_max_events);
+    // Auto-captured events (action: "auto") are real but noisy — they stay
+    // out of the terse brief and only show up in events.jsonl/handoff.
+    const events = this.lastEvents(50)
+      .filter(e => e.action !== "auto")
+      .slice(-cfg.brief_max_events);
 
     const lines = [
       `AI-UNIVERSAL-MEMORY BRIEF — ${cfg.project_name}`,

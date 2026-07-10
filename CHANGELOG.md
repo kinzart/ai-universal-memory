@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.4.0
+
+Competitive response to claude-mem (85k+ stars): it captures everything
+automatically via lifecycle hooks but stores memory in SQLite on the
+user's machine — not in the repo, not in git, not in a PR diff, gone on
+uninstall. This release keeps our flank (git-native, team memory, zero
+infra) while closing the automatic-capture gap.
+
+### Added
+
+- **Zero-LLM auto-capture.** `aum init` now wires two more Claude Code
+  hooks by default: `PostToolUse` (`.memory/tools/auto-capture.mjs`)
+  appends one compact line per `Write`/`Edit`/`MultiEdit`/
+  `NotebookEdit`/`Bash` call straight to `events.jsonl` — no LLM call,
+  no lock, no state write, ~0ms, and consecutive identical actions
+  collapse into one line. `Stop` (`.memory/tools/session-stop.mjs`)
+  runs once per turn, writes a single human-readable summary ("Session
+  abc123: 14 actions across 5 files — a.js, b.php, …"), and regenerates
+  `BRIEF.md`/`handoff.md` exactly once instead of on every edit.
+  Auto-captured events stay out of `BRIEF.md`'s `Recent:` line (that's
+  the turn summary's job) but remain fully auditable in `events.jsonl`
+  and `handoff.md`. Toggle with `aum init --no-auto-capture`, or any
+  time with `aum auto on|off|status` (also on the vendored local CLI).
+  New engine primitives: `appendEvent()` (fast, unlocked, single-line
+  append) and `regenerate()` (public, locked `BRIEF.md`/`handoff.md`
+  refresh). `doctor` gained checks for both new hooks and their
+  portability.
+- README: a **"claude-mem vs this"** section — honest positioning
+  against the category leader (different problem: project memory in
+  git vs. personal memory in SQLite; they can coexist).
+- Named the existing `BRIEF.md` → `handoff.md` → `events.jsonl`
+  architecture **"progressive disclosure: three layers"** and applied
+  the vocabulary consistently in the README, `.memory/README.md`,
+  `templates/claude-block.md`, `templates/agents-block.md`, and the
+  Claude Code Skill — so the agent itself understands the cost model
+  ("read Layer 1 always, escalate only if needed").
+
 ## 0.3.1
 
 Caught by the new CI matrix on its very first real run (windows-latest,

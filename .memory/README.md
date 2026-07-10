@@ -6,14 +6,18 @@ there is nothing here that depends on one vendor or one chat session.
 
 Core rule: **the AI does not remember. The project remembers.**
 
-## Read this first, cheaply
+## Progressive disclosure: read this first, cheaply
 
-- `BRIEF.md` — a small, always-current digest (a few hundred characters).
-  Read this before anything else. It is regenerated automatically.
-- `handoff.md` — the full picture: state, pending work, risks, facts,
-  recent events. Read this when `BRIEF.md` isn't enough.
-- `events.jsonl` — the complete append-only history. Only read this in
-  full when you need deep history; it can get long.
+Three layers — read Layer 1 always, escalate only if you need to:
+
+- **Layer 1 — `BRIEF.md`.** A small, always-current digest (a few
+  hundred characters). Read this before anything else. Regenerated
+  automatically.
+- **Layer 2 — `handoff.md`.** The full picture: state, pending work,
+  risks, facts, recent events. Read this when `BRIEF.md` isn't enough.
+- **Layer 3 — `events.jsonl`.** The complete append-only history. Only
+  read this in full (or `node .memory/tools/cli.mjs search "term"`)
+  when you need deep history; it can get long.
 
 ## Files
 
@@ -33,6 +37,8 @@ Core rule: **the AI does not remember. The project remembers.**
 | `tools/engine.mjs` | zero-dependency memory engine (the implementation) |
 | `tools/cli.mjs` | local CLI, works without the npm package installed |
 | `tools/session-start.mjs` | Claude Code SessionStart hook target |
+| `tools/auto-capture.mjs` | Claude Code PostToolUse hook — 1 line/action, no LLM |
+| `tools/session-stop.mjs` | Claude Code Stop hook — consolidates the turn once |
 
 ## Updating memory (any engine, any human)
 
@@ -45,7 +51,14 @@ node .memory/tools/cli.mjs risk "risk text" --severity medium --agent "claude-co
 node .memory/tools/cli.mjs risk-resolve <id>
 node .memory/tools/cli.mjs fact "fact text" --status confirmed --source "..." --agent "claude-code"
 node .memory/tools/cli.mjs handoff
+node .memory/tools/cli.mjs search "term"
+node .memory/tools/cli.mjs auto on|off|status
 ```
+
+On Claude Code, routine `Write`/`Edit`/`Bash` calls are already
+auto-captured (no LLM, one line per action, one summary per turn) via
+the `PostToolUse`/`Stop` hooks — that doesn't replace logging
+meaningful decisions/risks/facts yourself.
 
 Use `--agent` to name whoever is acting: `claude-code`, `cursor`,
 `chatgpt-web`, `gemini`, `human:yourname`. This is how the memory tracks

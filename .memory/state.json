@@ -2,9 +2,9 @@
   "status": "done",
   "current_phase": "setup",
   "last_agent": "claude-code",
-  "last_action": "fix",
-  "last_summary": "CI's first real run caught a genuine bug on windows-latest+node18: writeJson's atomic rename could throw EPERM under concurrent writes (Windows Defender/handle-release quirk, not a locking bug). Fixed with a short retry-with-backoff around fs.renameSync for EPERM/EBUSY/EACCES, plus a regression test that mocks fs.renameSync to fail twice then succeed. Shipping as 0.3.1.",
-  "last_updated": "2026-07-10T01:12:05.133Z",
+  "last_action": "feature",
+  "last_summary": "Executed the P1.0 delta from the updated mission file: zero-LLM auto-capture via PostToolUse/Stop hooks (auto-capture.mjs, session-stop.mjs), engine appendEvent()/regenerate() primitives, aum auto on|off|status, --no-auto-capture flag, dedupe of consecutive identical edits, brief filtering of auto events. Plus README additions: claude-mem vs this comparison table, and 'progressive disclosure: three layers' terminology applied consistently across README/.memory/README.md/claude-block.md/agents-block.md/SKILL.md. 26/26 tests passing. Bumped to 0.4.0.",
+  "last_updated": "2026-07-10T01:30:26.660Z",
   "engines_seen": [
     "ai-universal-memory",
     "claude-code"

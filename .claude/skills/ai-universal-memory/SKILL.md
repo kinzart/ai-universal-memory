@@ -11,27 +11,34 @@ across humans. Full docs: `.memory/README.md`.
 
 Core rule: **the AI does not remember. The project remembers.**
 
-## Before doing any work
+## Before doing any work: progressive disclosure, three layers
 
 A short digest is usually already injected automatically at session start
-(`.memory/BRIEF.md`). If you don't see it, or need more depth, read in
-this order — stop as soon as you have enough:
+(`.memory/BRIEF.md`). Read Layer 1 always; escalate only if you need to:
 
-1. `.memory/BRIEF.md` (cheap, a few hundred characters)
-2. `.memory/handoff.md` (full current state)
-3. `.memory/events.jsonl` — only the tail, only if you need deep history
+1. **Layer 1 — `.memory/BRIEF.md`** (cheap, a few hundred characters,
+   auto-injected). If you don't see it, read it now.
+2. **Layer 2 — `.memory/handoff.md`** (full current state). Read on
+   demand if Layer 1 isn't enough.
+3. **Layer 3 — `.memory/events.jsonl`** (full history). Read the tail,
+   or `node .memory/tools/cli.mjs search "term"`, only if you need deep
+   history.
 
 ```bash
 node .memory/tools/cli.mjs brief
 node .memory/tools/cli.mjs read
 node .memory/tools/cli.mjs last 30
+node .memory/tools/cli.mjs search "term"
 ```
 
 ## While working
 
-Log meaningful actions, decisions, pending work, risks and facts as you
-go — don't wait until the end, and don't skip it because "the chat has
-it": the chat is not memory, `.memory/` is.
+Routine edits (`Write`/`Edit`/`Bash`) are already auto-captured by
+`PostToolUse`/`Stop` hooks — one line per action, no LLM, consolidated
+into one summary per turn. That does **not** replace logging meaningful
+decisions, pending work, risks and facts yourself as you go — don't wait
+until the end, and don't skip it because "the chat has it": the chat is
+not memory, `.memory/` is.
 
 ```bash
 node .memory/tools/cli.mjs log "what you did" --agent "claude-code"

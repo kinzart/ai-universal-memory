@@ -3,6 +3,7 @@
 // Lives inside .memory/tools/ so it keeps working forever, even without
 // the npm package installed or internet access. Talks to engine.mjs only.
 
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ProjectMemory } from "./engine.mjs";
@@ -47,6 +48,7 @@ function help() {
   node .memory/tools/cli.mjs last [n]
   node .memory/tools/cli.mjs search "term" [--limit 25]
   node .memory/tools/cli.mjs compact [--keep 200]
+  node .memory/tools/cli.mjs auto on|off|status
 `);
 }
 
@@ -138,6 +140,23 @@ async function main() {
     case "compact": {
       const { rotated, kept } = memory.compact({ keep: Number(arg("--keep", "200")) });
       console.log(`Rotated ${rotated} event(s) to .memory/snapshots/, kept ${kept}.`);
+      break;
+    }
+    case "auto": {
+      const mode = (args[1] || "").toLowerCase();
+      if (!["on", "off", "status"].includes(mode)) {
+        console.error("Usage: cli.mjs auto on|off|status");
+        process.exit(1);
+      }
+      const cfgPath = path.join(root, ".memory", "config.json");
+      const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf8"));
+      if (mode === "status") {
+        console.log(`auto_capture: ${cfg.auto_capture !== false}`);
+        break;
+      }
+      cfg.auto_capture = mode === "on";
+      fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2) + "\n", "utf8");
+      console.log(`auto_capture set to ${cfg.auto_capture}.`);
       break;
     }
     default:

@@ -3,9 +3,13 @@
 
 This project persists memory in `.memory/` — state, decisions, pending
 tasks, risks and facts that survive across sessions, AI engines, and
-humans. **Read `.memory/BRIEF.md` before doing anything else** (it's
-short, cheap to read). Go deeper into `.memory/handoff.md` or
-`.memory/events.jsonl` only if you need more context.
+humans. Read it via progressive disclosure — go deeper only if you need to:
+
+- **Layer 1 — `.memory/BRIEF.md`.** Read this before doing anything else
+  (it's short, cheap to read).
+- **Layer 2 — `.memory/handoff.md`.** Full current state — read on demand.
+- **Layer 3 — `.memory/events.jsonl`.** Full history — read (or
+  `node .memory/tools/cli.mjs search "term"`) only if you need deep context.
 
 After doing meaningful work, log it:
 

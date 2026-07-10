@@ -70,14 +70,20 @@ Portable project memory for any AI engine or human. Zero-dependency data
 layer, vendored into every project so it keeps working without this
 package installed.
 
-  npx ai-universal-memory init [--engines claude,agents,cursor] [--name X] [--no-scan]
+  npx ai-universal-memory init [--engines claude,agents,cursor] [--name X] [--no-scan] [--no-auto-capture]
       Create .memory/ and wire up the requested engines. Safe to re-run.
       On first init, also scans the project (package.json, README, top-level
       structure, git status — all local, no network) and seeds real facts
       so the memory isn't empty on day one. Use --no-scan to skip that.
+      Auto-capture (PostToolUse/Stop hooks, no LLM) is on by default —
+      use --no-auto-capture to skip wiring it up.
 
-  npx ai-universal-memory install [--engines claude,agents,cursor]
+  npx ai-universal-memory install [--engines claude,agents,cursor] [--no-auto-capture]
       (Re)install engine integrations without touching existing data.
+
+  npx ai-universal-memory auto on|off|status
+      Toggle zero-LLM auto-capture (one line per tool call, consolidated
+      once per turn) without hand-editing .memory/config.json.
 
   npx ai-universal-memory doctor
       Check what's installed and report anything missing.
@@ -123,7 +129,15 @@ async function main() {
     const ProjectMemory = (await import("../src/core.js")).ProjectMemory;
     const memory = new ProjectMemory(root);
     const alreadyInitialized = memory.isInitialized();
+    const autoCapture = !hasFlag("--no-auto-capture");
     memory.init({ projectName: flag("--name") });
+
+    if (!alreadyInitialized && !autoCapture) {
+      const cfgPath = path.join(root, ".memory", "config.json");
+      const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf8"));
+      cfg.auto_capture = false;
+      fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2) + "\n", "utf8");
+    }
 
     let scanned = false;
     if (!alreadyInitialized && !hasFlag("--no-scan")) {
@@ -135,7 +149,7 @@ async function main() {
       }
     }
 
-    const results = installAll(root, { engines: parseEngines() });
+    const results = installAll(root, { engines: parseEngines(), autoCapture });
     console.log(`${alreadyInitialized ? "Memory already existed — re-synced" : "Memory initialized"} in ${path.join(root, ".memory")}`);
     console.log("Installed:", Object.keys(results).filter(k => results[k]).join(", "));
     if (scanned) console.log("Scanned the project (package.json, README, structure, git) and seeded initial facts — see: npx ai-universal-memory read");
@@ -146,7 +160,7 @@ async function main() {
 
   if (cmd === "install") {
     const engines = parseEngines();
-    const results = installAll(root, { engines });
+    const results = installAll(root, { engines, autoCapture: !hasFlag("--no-auto-capture") });
     console.log("Installed:", Object.keys(results).filter(k => results[k]).join(", "));
     return;
   }
@@ -169,6 +183,28 @@ async function main() {
     } else {
       console.log("\nAll good.");
     }
+    return;
+  }
+
+  if (cmd === "auto") {
+    const mode = (args[1] || "").toLowerCase();
+    if (!["on", "off", "status"].includes(mode)) {
+      console.error("Usage: aum auto on|off|status");
+      process.exit(1);
+    }
+    const cfgPath = path.join(root, ".memory", "config.json");
+    if (!fs.existsSync(cfgPath)) {
+      console.error(`Memory not initialized in ${root}. Run: npx ai-universal-memory init`);
+      process.exit(1);
+    }
+    const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf8"));
+    if (mode === "status") {
+      console.log(`auto_capture: ${cfg.auto_capture !== false}`);
+      return;
+    }
+    cfg.auto_capture = mode === "on";
+    fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2) + "\n", "utf8");
+    console.log(`auto_capture set to ${cfg.auto_capture}.`);
     return;
   }
 

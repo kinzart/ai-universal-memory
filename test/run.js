@@ -140,6 +140,68 @@ test("compact rotates old events into snapshots/ without deleting them", () => {
   assert.ok(snapshots.some(f => f.endsWith(".jsonl")));
 });
 
+test("appendEvent records auto-captured events without touching state.json", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  const stateBefore = readJson(path.join(root, ".memory", "state.json"));
+  const before = m.lastEvents(100).length;
+  m.appendEvent({ time: new Date().toISOString(), agent: "claude-code", action: "auto", status: "done", summary: "Edit: a.js", session: "abc12345" });
+  m.appendEvent({ time: new Date().toISOString(), agent: "claude-code", action: "auto", status: "done", summary: "Edit: b.js", session: "abc12345" });
+  assert.equal(m.lastEvents(100).length, before + 2);
+  const stateAfter = readJson(path.join(root, ".memory", "state.json"));
+  assert.deepEqual(stateBefore, stateAfter, "appendEvent must not touch state.json");
+});
+
+test("brief hides auto events, handoff/events.jsonl keep them auditable", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  m.appendEvent({ time: new Date().toISOString(), agent: "claude-code", action: "auto", status: "done", summary: "Edit: noisy.js", session: "abc12345" });
+  m.regenerate();
+  assert.ok(!m.brief().includes("noisy.js"), "brief should hide auto events");
+  assert.ok(fs.readFileSync(path.join(root, ".memory", "events.jsonl"), "utf8").includes("noisy.js"), "events.jsonl keeps everything");
+  assert.ok(m.generateHandoff().includes("noisy.js"), "handoff's raw event log keeps auto events auditable too");
+});
+
+test("auto_capture defaults to true and is toggleable via config.json", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  assert.equal(m.config().auto_capture, true);
+});
+
+test("config() treats a missing auto_capture field (old .memory/) as enabled", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  const cfg = readJson(path.join(root, ".memory", "config.json"));
+  delete cfg.auto_capture;
+  fs.writeFileSync(path.join(root, ".memory", "config.json"), JSON.stringify(cfg, null, 2));
+  assert.notEqual(m.config().auto_capture, false);
+});
+
+test("installAutoCapture wires PostToolUse and Stop with $CLAUDE_PROJECT_DIR", () => {
+  const root = tmpProject();
+  new ProjectMemory(root).init();
+  installAll(root, { engines: ["claude"] });
+  const settings = readJson(path.join(root, ".claude", "settings.json"));
+  const postCmd = settings.hooks.PostToolUse[0].hooks[0].command;
+  const stopCmd = settings.hooks.Stop[0].hooks[0].command;
+  assert.ok(postCmd.includes("$CLAUDE_PROJECT_DIR") && postCmd.includes("auto-capture.mjs"));
+  assert.ok(stopCmd.includes("$CLAUDE_PROJECT_DIR") && stopCmd.includes("session-stop.mjs"));
+  assert.equal(settings.hooks.PostToolUse[0].matcher, "Write|Edit|MultiEdit|NotebookEdit|Bash");
+});
+
+test("installAll(autoCapture: false) skips the auto-capture hooks", () => {
+  const root = tmpProject();
+  new ProjectMemory(root).init();
+  const results = installAll(root, { engines: ["claude"], autoCapture: false });
+  assert.equal(results.autoCapture, undefined);
+  const settings = readJson(path.join(root, ".claude", "settings.json"));
+  assert.equal(settings.hooks.PostToolUse, undefined);
+});
+
 test("writeJson survives a transient EPERM on rename (Windows Defender / handle-not-released scenario)", () => {
   const root = tmpProject();
   const m = new ProjectMemory(root);
