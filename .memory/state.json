@@ -2,9 +2,9 @@
   "status": "done",
   "current_phase": "setup",
   "last_agent": "claude-code",
-  "last_action": "todo",
-  "last_summary": "Executed MISSAO-AUM-v0.3.md phase P2: rewrote test suite on node:test (19 tests, was ad-hoc script), fixed CI to actually trigger (was on branch 'main', repo uses 'master') plus full os/node matrix and e2e smoke test, wired --provenance into the tag-triggered publish workflow, added src/core.d.ts (validated with real tsc --strict, zero errors) and 'types' field, README got badges/comparison table/uninstall section (demo.gif not rendered — vhs+ttyd got installed and hung on headless Chrome in this environment; demo.tape is committed for anyone to render locally), added CONTRIBUTING.md/SECURITY.md/issue templates, and 8 GitHub topics. Bumped to 0.3.0. All mission acceptance criteria pass.",
-  "last_updated": "2026-07-10T00:57:30.632Z",
+  "last_action": "fix",
+  "last_summary": "CI's first real run caught a genuine bug on windows-latest+node18: writeJson's atomic rename could throw EPERM under concurrent writes (Windows Defender/handle-release quirk, not a locking bug). Fixed with a short retry-with-backoff around fs.renameSync for EPERM/EBUSY/EACCES, plus a regression test that mocks fs.renameSync to fail twice then succeed. Shipping as 0.3.1.",
+  "last_updated": "2026-07-10T01:12:05.133Z",
   "engines_seen": [
     "ai-universal-memory",
     "claude-code"

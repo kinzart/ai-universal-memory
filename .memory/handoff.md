@@ -7,14 +7,14 @@
 
 - Status: done
 - Phase: setup
-- Last updated: 2026-07-10T00:57:30.632Z
+- Last updated: 2026-07-10T01:12:05.133Z
 - Last agent: claude-code
-- Last action: todo
+- Last action: fix
 - Engines seen on this project: ai-universal-memory, claude-code
 
 ## Last Summary
 
-Executed MISSAO-AUM-v0.3.md phase P2: rewrote test suite on node:test (19 tests, was ad-hoc script), fixed CI to actually trigger (was on branch 'main', repo uses 'master') plus full os/node matrix and e2e smoke test, wired --provenance into the tag-triggered publish workflow, added src/core.d.ts (validated with real tsc --strict, zero errors) and 'types' field, README got badges/comparison table/uninstall section (demo.gif not rendered — vhs+ttyd got installed and hung on headless Chrome in this environment; demo.tape is committed for anyone to render locally), added CONTRIBUTING.md/SECURITY.md/issue templates, and 8 GitHub topics. Bumped to 0.3.0. All mission acceptance criteria pass.
+CI's first real run caught a genuine bug on windows-latest+node18: writeJson's atomic rename could throw EPERM under concurrent writes (Windows Defender/handle-release quirk, not a locking bug). Fixed with a short retry-with-backoff around fs.renameSync for EPERM/EBUSY/EACCES, plus a regression test that mocks fs.renameSync to fail twice then succeed. Shipping as 0.3.1.
 
 ## Pending Work (4)
 
@@ -42,7 +42,6 @@ Executed MISSAO-AUM-v0.3.md phase P2: rewrote test suite on node:test (19 tests,
 ## Latest Events
 
 ```jsonl
-{"time":"2026-07-09T22:56:53.241Z","agent":"claude-code","action":"todo","status":"done","summary":"Add more engine installers: Windsurf, Zed, JetBrains AI Assistant","next":[],"error":null}
 {"time":"2026-07-09T22:56:53.321Z","agent":"claude-code","action":"todo","status":"done","summary":"Consider aum search / snapshot diff commands","next":[],"error":null}
 {"time":"2026-07-09T23:21:39.241Z","agent":"claude-code","action":"note","status":"done","summary":"Corrected GitHub username from placeholder kinzartmusica to actual authenticated account kinzart across package.json, LICENSE and .memory/","next":[],"error":null}
 {"time":"2026-07-09T23:24:53.076Z","agent":"claude-code","action":"note","status":"done","summary":"Fixed package.json bin paths (npm was silently dropping bin entries with a leading ./ prefix during publish) via npm pkg fix","next":[],"error":null}
@@ -62,6 +61,7 @@ Executed MISSAO-AUM-v0.3.md phase P2: rewrote test suite on node:test (19 tests,
 {"time":"2026-07-10T00:57:30.455Z","agent":"claude-code","action":"release","status":"done","summary":"Executed MISSAO-AUM-v0.3.md phase P2: rewrote test suite on node:test (19 tests, was ad-hoc script), fixed CI to actually trigger (was on branch 'main', repo uses 'master') plus full os/node matrix and e2e smoke test, wired --provenance into the tag-triggered publish workflow, added src/core.d.ts (validated with real tsc --strict, zero errors) and 'types' field, README got badges/comparison table/uninstall section (demo.gif not rendered — vhs+ttyd got installed and hung on headless Chrome in this environment; demo.tape is committed for anyone to render locally), added CONTRIBUTING.md/SECURITY.md/issue templates, and 8 GitHub topics. Bumped to 0.3.0. All mission acceptance criteria pass.","next":[],"error":null}
 {"time":"2026-07-10T00:57:30.548Z","agent":"claude-code","action":"todo","status":"done","summary":"Render demo.gif with vhs on a machine where headless Chrome works, or find an alternative renderer","next":[],"error":null}
 {"time":"2026-07-10T00:57:30.632Z","agent":"claude-code","action":"todo","status":"done","summary":"Consider a GitHub social preview image (1280x640) — no reliable CLI/API path found, likely needs the web UI","next":[],"error":null}
+{"time":"2026-07-10T01:12:05.133Z","agent":"claude-code","action":"fix","status":"done","summary":"CI's first real run caught a genuine bug on windows-latest+node18: writeJson's atomic rename could throw EPERM under concurrent writes (Windows Defender/handle-release quirk, not a locking bug). Fixed with a short retry-with-backoff around fs.renameSync for EPERM/EBUSY/EACCES, plus a regression test that mocks fs.renameSync to fail twice then succeed. Shipping as 0.3.1.","next":[],"error":null}
 ```
 
 ## Full History

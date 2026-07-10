@@ -44,7 +44,28 @@ function writeJson(file, data) {
   ensureDir(path.dirname(file));
   const tmp = `${file}.${process.pid}.${Math.random().toString(36).slice(2, 6)}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2) + "\n", "utf8");
-  fs.renameSync(tmp, file);
+  renameWithRetry(tmp, file);
+}
+
+// Windows can transiently refuse a rename onto an existing file with EPERM
+// (antivirus/Defender briefly scanning the just-written temp file, or a
+// reader that hasn't released its handle yet) even though nothing in this
+// process is misusing the file. POSIX rename doesn't have this failure
+// mode. A short retry-with-backoff clears it without weakening the
+// cross-process lock that already serializes our own writers.
+function renameWithRetry(tmp, dest, { retries = 8, delayMs = 15 } = {}) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      fs.renameSync(tmp, dest);
+      return;
+    } catch (err) {
+      if (!["EPERM", "EBUSY", "EACCES"].includes(err.code) || i === retries - 1) {
+        try { fs.rmSync(tmp, { force: true }); } catch { /* best effort cleanup */ }
+        throw err;
+      }
+      sleepSync(delayMs);
+    }
+  }
 }
 
 // Cross-process mutex via mkdir, which is atomic-exclusive on every OS —
@@ -94,8 +115,9 @@ function newId() {
 
 function truncate(str, max) {
   if (!str) return "";
-  if (str.length <= max) return str;
-  return str.slice(0, max - 1).trimEnd() + "…";
+  const chars = Array.from(str); // splits by code points, not UTF-16 units — keeps emoji/accents intact
+  if (chars.length <= max) return str;
+  return chars.slice(0, max - 1).join("").trimEnd() + "…";
 }
 
 export class ProjectMemory {
@@ -383,6 +405,53 @@ export class ProjectMemory {
       writeJson(this.factsFile, facts);
       this._logUnlocked({ agent, action: "fact", summary: fact, touchSummary: false });
       return item;
+    });
+  }
+
+  // ---- search --------------------------------------------------------------
+
+  search(term, { limit = 25 } = {}) {
+    const q = String(term || "").trim().toLowerCase();
+    if (!q) return [];
+    const hit = (s) => typeof s === "string" && s.toLowerCase().includes(q);
+    const out = [];
+
+    for (const e of this.lastEvents(10000)) {
+      if (hit(e.summary)) out.push({ kind: "event", time: e.time, agent: e.agent, text: e.summary });
+    }
+    const facts = readJson(this.factsFile, { confirmed: [], probable: [], needs_validation: [] });
+    for (const bucket of ["confirmed", "probable", "needs_validation"]) {
+      for (const f of facts[bucket]) {
+        if (hit(f.fact) || hit(f.source)) out.push({ kind: `fact:${bucket}`, time: f.created_at, agent: f.agent, text: f.fact });
+      }
+    }
+    for (const d of readJson(this.decisionsJsonFile, [])) {
+      if (hit(d.text)) out.push({ kind: "decision", time: d.created_at, agent: d.agent, text: d.text });
+    }
+    for (const t of readJson(this.todoJsonFile, [])) {
+      if (hit(t.text)) out.push({ kind: t.done ? "todo:done" : "todo:pending", id: t.id, time: t.created_at, agent: t.agent, text: t.text });
+    }
+    for (const r of readJson(this.risksJsonFile, [])) {
+      if (hit(r.text)) out.push({ kind: r.resolved ? "risk:resolved" : "risk:open", id: r.id, time: r.created_at, agent: r.agent, text: r.text });
+    }
+
+    out.sort((a, b) => String(a.time).localeCompare(String(b.time)));
+    return out.slice(-limit);
+  }
+
+  // ---- compact ---------------------------------------------------------------
+
+  compact({ keep = 200 } = {}) {
+    return withLock(this.dir, () => {
+      const lines = read(this.eventsFile, "").trim().split("\n").filter(Boolean);
+      if (lines.length <= keep) return { rotated: 0, kept: lines.length };
+      const cutoff = lines.length - keep;
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+      ensureDir(this.snapshotsDir);
+      write(path.join(this.snapshotsDir, `events-${stamp}.jsonl`), lines.slice(0, cutoff).join("\n") + "\n");
+      write(this.eventsFile, lines.slice(cutoff).join("\n") + "\n");
+      this._regenerateDerived();
+      return { rotated: cutoff, kept: keep };
     });
   }
 

@@ -44,7 +44,28 @@ function writeJson(file, data) {
   ensureDir(path.dirname(file));
   const tmp = `${file}.${process.pid}.${Math.random().toString(36).slice(2, 6)}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2) + "\n", "utf8");
-  fs.renameSync(tmp, file);
+  renameWithRetry(tmp, file);
+}
+
+// Windows can transiently refuse a rename onto an existing file with EPERM
+// (antivirus/Defender briefly scanning the just-written temp file, or a
+// reader that hasn't released its handle yet) even though nothing in this
+// process is misusing the file. POSIX rename doesn't have this failure
+// mode. A short retry-with-backoff clears it without weakening the
+// cross-process lock that already serializes our own writers.
+function renameWithRetry(tmp, dest, { retries = 8, delayMs = 15 } = {}) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      fs.renameSync(tmp, dest);
+      return;
+    } catch (err) {
+      if (!["EPERM", "EBUSY", "EACCES"].includes(err.code) || i === retries - 1) {
+        try { fs.rmSync(tmp, { force: true }); } catch { /* best effort cleanup */ }
+        throw err;
+      }
+      sleepSync(delayMs);
+    }
+  }
 }
 
 // Cross-process mutex via mkdir, which is atomic-exclusive on every OS —

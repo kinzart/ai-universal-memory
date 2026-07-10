@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.1
+
+Caught by the new CI matrix on its very first real run (windows-latest,
+Node 18) — exactly the kind of bug the matrix exists to catch:
+
+- `writeJson`'s atomic rename could fail with `EPERM` on Windows under
+  concurrent writes (Defender/AV briefly scanning the just-written temp
+  file, or a reader that hasn't released its handle yet — a known
+  Windows filesystem quirk, not a bug in our locking). Added a short
+  retry-with-backoff around the rename specifically for
+  `EPERM`/`EBUSY`/`EACCES`. Regression test simulates the failure by
+  patching `fs.renameSync`.
+
 ## 0.3.0
 
 Fixes 6 bugs found by an external audit of the published v0.2.0 tarball,

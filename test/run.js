@@ -140,6 +140,34 @@ test("compact rotates old events into snapshots/ without deleting them", () => {
   assert.ok(snapshots.some(f => f.endsWith(".jsonl")));
 });
 
+test("writeJson survives a transient EPERM on rename (Windows Defender / handle-not-released scenario)", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+
+  const realRename = fs.renameSync;
+  let calls = 0;
+  fs.renameSync = (...args) => {
+    calls++;
+    if (calls <= 2) {
+      const err = new Error("simulated transient lock");
+      err.code = "EPERM";
+      throw err;
+    }
+    return realRename(...args);
+  };
+
+  try {
+    m.log({ agent: "t", summary: "should survive flaky rename" });
+  } finally {
+    fs.renameSync = realRename;
+  }
+
+  assert.ok(calls >= 3, "should have retried past the simulated EPERM failures");
+  const state = readJson(path.join(root, ".memory", "state.json"));
+  assert.equal(state.last_summary, "should survive flaky rename");
+});
+
 test("20 concurrent writers (separate processes) lose nothing and leave valid JSON", async () => {
   const root = tmpProject();
   new ProjectMemory(root).init();
