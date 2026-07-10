@@ -1,5 +1,10 @@
 # AI Universal Memory
 
+[![npm version](https://img.shields.io/npm/v/ai-universal-memory.svg)](https://www.npmjs.com/package/ai-universal-memory)
+[![CI](https://github.com/kinzart/ai-universal-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/kinzart/ai-universal-memory/actions/workflows/ci.yml)
+![zero dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Portable, zero-dependency project memory for any AI coding engine — or
 human — picking up where the last one left off.
 
@@ -8,6 +13,10 @@ human — picking up where the last one left off.
 ```bash
 npx ai-universal-memory init
 ```
+
+(A terminal demo — `init` → log a decision/todo → `brief` — is scripted
+in `demo.tape`; render it yourself with [vhs](https://github.com/charmbracelet/vhs)
+via `vhs demo.tape` if you want the GIF locally.)
 
 That's it. Your project now has a `.memory/` folder that any AI (Claude
 Code, Cursor, ChatGPT, Gemini, a local model) or any human can read and
@@ -42,6 +51,15 @@ and why), **engine-agnostic** (works the same whether the actor is
 Claude, GPT, Gemini, or a person), and **token-cheap by construction**
 (the automatic read is a few hundred characters, not your whole history).
 That's the gap this project fills.
+
+|                              | CLAUDE.md / AGENTS.md | MCP memory server | mem0 / cloud memory | **ai-universal-memory** |
+|------------------------------|:----------------------:|:------------------:|:--------------------:|:-------------------------:|
+| Lives in git, auditable      | ✅ (static)            | ❌                  | ❌                    | ✅                        |
+| Logs events/decisions        | ❌                     | partial             | ✅                    | ✅                        |
+| Works offline, no account    | ✅                     | ❌                  | ❌                    | ✅                        |
+| Engine-agnostic               | partial                | MCP clients only    | own SDK               | ✅ (the file is the API) |
+| Token cost per session        | whole file             | per call             | per call               | ~150–220 tokens, fixed   |
+| Survives without the package  | ✅                     | ❌                  | ❌                    | ✅ (vendored engine)     |
 
 ## How it works
 
@@ -164,6 +182,21 @@ memory block is added or updated.
 
 Commit `.memory/` like any other project file. That's what makes it
 travel with the project across machines, engines and people.
+
+## Uninstall
+
+Nothing here needs an uninstaller script — it's all plain files:
+
+```bash
+rm -rf .memory .claude/skills/ai-universal-memory .cursor/rules/ai-universal-memory.mdc
+```
+
+Then remove the two marked blocks (between `<!-- ai-universal-memory:start -->`
+and `<!-- ai-universal-memory:end -->`) from `AGENTS.md` and `CLAUDE.md`
+if you added them, and the `SessionStart` hook entry from
+`.claude/settings.json` (the one whose command mentions
+`session-start.mjs`) if you no longer want it. Nothing else on your
+system was touched.
 
 ## Roadmap
 

@@ -2,18 +2,28 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [18, 20, 22]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node }}
       - run: npm test
+      - name: e2e smoke — init + doctor on a clean project
+        shell: bash
+        run: |
+          mkdir -p /tmp/smoke && cd /tmp/smoke
+          echo '{"name":"smoke","version":"1.0.0"}' > package.json
+          node "$GITHUB_WORKSPACE/bin/aum.js" init --no-scan
+          node "$GITHUB_WORKSPACE/bin/aum.js" doctor
+          node .memory/tools/cli.mjs todo "smoke todo" --agent ci
+          node .memory/tools/cli.mjs brief

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (unreleased)
+## 0.3.0
 
 Fixes 6 bugs found by an external audit of the published v0.2.0 tarball,
 plus the roadmap features that unlock treating memory as consultable
@@ -51,6 +51,33 @@ rather than just append-only, plus repo credibility infra.
   `.memory/snapshots/<timestamp>.jsonl`. Nothing is deleted, only
   moved, so history stays complete and auditable while keeping the
   live log small.
+
+### Infra / credibility
+
+- Real test suite on Node's built-in `node:test` runner (19 tests,
+  `npm test` / `node --test test/run.js`), covering the P0 fixes
+  (lock/atomicity with 20 real concurrent processes, hook portability,
+  touchSummary), the P1 features (search, compact, unicode-safe
+  truncate), and the bootstrap scan. `test/` stays out of the
+  published tarball.
+- CI now runs the matrix that actually matters for a tool that touches
+  hooks, `path.sep`, and atomic renames: ubuntu + windows + macos ×
+  Node 18/20/22, plus an end-to-end smoke test (`init` → `doctor` →
+  `todo` → `brief` in a throwaway project). Also fixed CI never having
+  actually run: it was configured to trigger on `main`, this repo's
+  default branch is `master`.
+- `npm publish` now runs with `--provenance` from the tag-triggered
+  GitHub Actions workflow (OIDC-based, can't be done from a local
+  `npm publish`).
+- Added `src/core.d.ts` with the full `ProjectMemory` public API,
+  wired via `"types"` in `package.json`. Type-checked with `tsc --strict`.
+- README: badges (npm version, CI status, zero-dependencies, MIT),
+  a comparison table against CLAUDE.md/AGENTS.md/MCP-memory/mem0, an
+  Uninstall section, and a `demo.tape` script for rendering a terminal
+  GIF with vhs.
+- `CONTRIBUTING.md`, `SECURITY.md`, GitHub issue templates, and GitHub
+  repo topics (`claude-code`, `mcp`, `ai-agents`, `agent-memory`,
+  `context-engineering`, `cursor`, `developer-tools`, `cli`).
 
 ## 0.2.0
 

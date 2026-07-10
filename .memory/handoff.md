@@ -7,19 +7,21 @@
 
 - Status: done
 - Phase: setup
-- Last updated: 2026-07-10T00:44:52.056Z
+- Last updated: 2026-07-10T00:57:30.632Z
 - Last agent: claude-code
-- Last action: feature
+- Last action: todo
 - Engines seen on this project: ai-universal-memory, claude-code
 
 ## Last Summary
 
-Executed MISSAO-AUM-v0.3.md phase P1: aum search across events/facts/decisions/todos/risks (CLI + MCP), aum compact rotating old events.jsonl into snapshots/ without deleting anything, and unicode-safe truncate (code points, not UTF-16 units) so emoji don't get mangled in BRIEF.md. Updated README roadmap and CHANGELOG.
+Executed MISSAO-AUM-v0.3.md phase P2: rewrote test suite on node:test (19 tests, was ad-hoc script), fixed CI to actually trigger (was on branch 'main', repo uses 'master') plus full os/node matrix and e2e smoke test, wired --provenance into the tag-triggered publish workflow, added src/core.d.ts (validated with real tsc --strict, zero errors) and 'types' field, README got badges/comparison table/uninstall section (demo.gif not rendered — vhs+ttyd got installed and hung on headless Chrome in this environment; demo.tape is committed for anyone to render locally), added CONTRIBUTING.md/SECURITY.md/issue templates, and 8 GitHub topics. Bumped to 0.3.0. All mission acceptance criteria pass.
 
-## Pending Work (2)
+## Pending Work (4)
 
 - [ ] (mre3wgs83gpu) Add more engine installers: Windsurf, Zed, JetBrains AI Assistant
 - [ ] (mre3wguf40lh) Consider aum search / snapshot diff commands
+- [ ] (mre87l4ia09l) Render demo.gif with vhs on a machine where headless Chrome works, or find an alternative renderer
+- [ ] (mre87l6u8qb3) Consider a GitHub social preview image (1280x640) — no reliable CLI/API path found, likely needs the web UI
 
 ## Open Risks (0)
 
@@ -40,9 +42,6 @@ Executed MISSAO-AUM-v0.3.md phase P1: aum search across events/facts/decisions/t
 ## Latest Events
 
 ```jsonl
-{"time":"2026-07-09T22:56:52.974Z","agent":"claude-code","action":"fact","status":"done","summary":"npm package name 'ai-universal-memory' was unclaimed as of 2026-07-09.","next":[],"error":null}
-{"time":"2026-07-09T22:56:53.063Z","agent":"claude-code","action":"todo","status":"done","summary":"Create the GitHub repo kinzartmusica/ai-universal-memory and push","next":[],"error":null}
-{"time":"2026-07-09T22:56:53.161Z","agent":"claude-code","action":"todo","status":"done","summary":"Publish 0.1.0 to npm (npm publish --access public) once repo is pushed","next":[],"error":null}
 {"time":"2026-07-09T22:56:53.241Z","agent":"claude-code","action":"todo","status":"done","summary":"Add more engine installers: Windsurf, Zed, JetBrains AI Assistant","next":[],"error":null}
 {"time":"2026-07-09T22:56:53.321Z","agent":"claude-code","action":"todo","status":"done","summary":"Consider aum search / snapshot diff commands","next":[],"error":null}
 {"time":"2026-07-09T23:21:39.241Z","agent":"claude-code","action":"note","status":"done","summary":"Corrected GitHub username from placeholder kinzartmusica to actual authenticated account kinzart across package.json, LICENSE and .memory/","next":[],"error":null}
@@ -60,6 +59,9 @@ Executed MISSAO-AUM-v0.3.md phase P1: aum search across events/facts/decisions/t
 {"time":"2026-07-10T00:41:33.118Z","agent":"claude-code","action":"fix","status":"done","summary":"Executed MISSAO-AUM-v0.3.md phase P0 (6 confirmed bugs from external audit of v0.2.0): portable SessionStart hook via $CLAUDE_PROJECT_DIR with auto-migration of old installs, todo-done/risk-resolve now exit 1 on unknown id instead of lying, atomic writeJson + mkdir-based cross-process lock around every mutator (verified with 20 concurrent writers, zero lost events), touchSummary flag so fact/todo/risk/decision no longer clobber state.last_summary, MCP server version now reads package.json + gained memory_todo_done/memory_risk_resolve tools, README 700/900 char inconsistency fixed. All P0 acceptance criteria pass.","next":[],"error":null}
 {"time":"2026-07-10T00:41:33.215Z","agent":"claude-code","action":"todo_done","status":"done","summary":"Add more engine installers: Windsurf, Zed, JetBrains AI Assistant","next":[],"error":null}
 {"time":"2026-07-10T00:44:52.056Z","agent":"claude-code","action":"feature","status":"done","summary":"Executed MISSAO-AUM-v0.3.md phase P1: aum search across events/facts/decisions/todos/risks (CLI + MCP), aum compact rotating old events.jsonl into snapshots/ without deleting anything, and unicode-safe truncate (code points, not UTF-16 units) so emoji don't get mangled in BRIEF.md. Updated README roadmap and CHANGELOG.","next":[],"error":null}
+{"time":"2026-07-10T00:57:30.455Z","agent":"claude-code","action":"release","status":"done","summary":"Executed MISSAO-AUM-v0.3.md phase P2: rewrote test suite on node:test (19 tests, was ad-hoc script), fixed CI to actually trigger (was on branch 'main', repo uses 'master') plus full os/node matrix and e2e smoke test, wired --provenance into the tag-triggered publish workflow, added src/core.d.ts (validated with real tsc --strict, zero errors) and 'types' field, README got badges/comparison table/uninstall section (demo.gif not rendered — vhs+ttyd got installed and hung on headless Chrome in this environment; demo.tape is committed for anyone to render locally), added CONTRIBUTING.md/SECURITY.md/issue templates, and 8 GitHub topics. Bumped to 0.3.0. All mission acceptance criteria pass.","next":[],"error":null}
+{"time":"2026-07-10T00:57:30.548Z","agent":"claude-code","action":"todo","status":"done","summary":"Render demo.gif with vhs on a machine where headless Chrome works, or find an alternative renderer","next":[],"error":null}
+{"time":"2026-07-10T00:57:30.632Z","agent":"claude-code","action":"todo","status":"done","summary":"Consider a GitHub social preview image (1280x640) — no reliable CLI/API path found, likely needs the web UI","next":[],"error":null}
 ```
 
 ## Full History

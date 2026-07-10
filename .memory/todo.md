@@ -2,6 +2,8 @@
 
 - [ ] (mre3wgs83gpu) Add more engine installers: Windsurf, Zed, JetBrains AI Assistant
 - [ ] (mre3wguf40lh) Consider aum search / snapshot diff commands
+- [ ] (mre87l4ia09l) Render demo.gif with vhs on a machine where headless Chrome works, or find an alternative renderer
+- [ ] (mre87l6u8qb3) Consider a GitHub social preview image (1280x640) — no reliable CLI/API path found, likely needs the web UI
 
 ## Done
 

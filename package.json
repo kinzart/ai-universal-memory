@@ -1,9 +1,10 @@
 {
   "name": "ai-universal-memory",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Portable, zero-dependency project memory for any AI coding engine (Claude Code, Cursor, ChatGPT, Gemini, ...) or human — handoff, decisions, facts and state that survive across sessions and engines.",
   "type": "module",
   "main": "src/core.js",
+  "types": "src/core.d.ts",
   "bin": {
     "aum": "bin/aum.js",
     "ai-universal-memory": "bin/aum.js"
@@ -18,7 +19,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "test": "node test/run.js",
+    "test": "node --test test/run.js",
     "mcp": "node bin/aum.js mcp"
   },
   "keywords": [

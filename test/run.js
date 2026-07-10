@@ -1,113 +1,254 @@
-#!/usr/bin/env node
-// Minimal smoke test, no test framework dependency: exercises the full
-// path (init -> log/decision/todo/risk/fact -> installers -> doctor) in a
-// throwaway temp directory and asserts the important invariants.
+// AI Universal Memory — test suite. Zero test-framework dependency:
+// uses Node's built-in test runner. Run with: node --test test/
+// or: npm test
 
+import { test } from "node:test";
+import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { ProjectMemory } from "../src/core.js";
-import { installAll, doctor, mergeBlock } from "../src/installers.js";
+import { installAll, doctor, mergeBlock, installClaudeHook } from "../src/installers.js";
 import { runBootstrap } from "../templates/bootstrap.mjs";
 
-const root = fs.mkdtempSync(path.join(os.tmpdir(), "aum-test-"));
-console.log(`Using temp project: ${root}`);
+const BIN = path.resolve("bin/aum.js");
 
-function must(cond, msg) {
-  assert.ok(cond, msg);
-  console.log(`ok - ${msg}`);
+function tmpProject(name = "aum-test-") {
+  return fs.mkdtempSync(path.join(os.tmpdir(), name));
 }
 
-const memory = new ProjectMemory(root);
-must(!memory.isInitialized(), "not initialized before init()");
+function readJson(p) {
+  return JSON.parse(fs.readFileSync(p, "utf8"));
+}
 
-memory.init({ projectName: "Test Project" });
-must(memory.isInitialized(), "initialized after init()");
-must(fs.existsSync(path.join(root, ".memory", "BRIEF.md")), "BRIEF.md created");
-must(fs.existsSync(path.join(root, ".memory", "handoff.md")), "handoff.md created");
+// --- core engine ------------------------------------------------------------
 
-memory.log({ agent: "claude-code", action: "note", summary: "did a thing" });
-memory.addDecision("Use file-based memory", { agent: "claude-code" });
-const todo = memory.addTodo("write more tests", { agent: "claude-code" });
-memory.completeTodo(todo.id, { agent: "claude-code" });
-const risk = memory.addRisk("flaky CI", { agent: "claude-code", severity: "low" });
-memory.resolveRisk(risk.id, { agent: "claude-code" });
-memory.addFact({ fact: "Node >= 18 required", status: "confirmed", source: "package.json", agent: "claude-code" });
+test("init creates the expected .memory/ files", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  assert.equal(m.isInitialized(), false);
+  m.init({ projectName: "Test Project" });
+  assert.equal(m.isInitialized(), true);
+  for (const f of ["BRIEF.md", "handoff.md", "state.json", "facts.json", "events.jsonl", "config.json", ".gitignore"]) {
+    assert.ok(fs.existsSync(path.join(root, ".memory", f)), `${f} should exist`);
+  }
+});
 
-const state = JSON.parse(fs.readFileSync(path.join(root, ".memory", "state.json"), "utf8"));
-must(state.engines_seen.includes("claude-code"), "engines_seen tracks agent");
+test("init is idempotent and never wipes existing data", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  m.addTodo("keep me", { agent: "test" });
+  m.init(); // re-run
+  const todos = readJson(path.join(root, ".memory", "todo.json"));
+  assert.equal(todos.length, 1);
+  assert.equal(todos[0].text, "keep me");
+});
 
-const brief = memory.brief();
-must(brief.length <= 950, `brief stays capped (${brief.length} chars)`);
-must(brief.includes("Test Project"), "brief mentions project name");
+test("completeTodo and resolveRisk return null on an unknown id", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  assert.equal(m.completeTodo("nope"), null);
+  assert.equal(m.resolveRisk("nope"), null);
+});
 
-const events = memory.lastEvents(100);
-must(events.length >= 6, `events recorded (${events.length})`);
+test("addDecision/addTodo/addRisk/addFact return null on empty input", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  assert.equal(m.addDecision(""), null);
+  assert.equal(m.addTodo(""), null);
+  assert.equal(m.addRisk(""), null);
+  assert.equal(m.addFact({ fact: "" }), null);
+});
 
-// installers: idempotent block merge
-installAll(root, { engines: ["claude", "agents", "cursor"] });
-const agentsMdOnce = fs.readFileSync(path.join(root, "AGENTS.md"), "utf8");
-installAll(root, { engines: ["claude", "agents", "cursor"] });
-const agentsMdTwice = fs.readFileSync(path.join(root, "AGENTS.md"), "utf8");
-must(
-  (agentsMdTwice.match(/ai-universal-memory:start/g) || []).length === 1,
-  "AGENTS.md block merge is idempotent (no duplicate blocks)"
-);
-must(agentsMdOnce.length > 0, "AGENTS.md non-empty after install");
+test("registrars (fact/todo/risk/decision) do not clobber last_summary", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  m.log({ agent: "t", action: "note", summary: "real work happened" });
+  m.addFact({ fact: "sky is blue", status: "confirmed", agent: "t" });
+  m.addDecision("use JWT", { agent: "t" });
+  m.addTodo("ship it", { agent: "t" });
+  const state = readJson(path.join(root, ".memory", "state.json"));
+  assert.equal(state.last_summary, "real work happened");
+});
 
-must(fs.existsSync(path.join(root, ".memory", "tools", "engine.mjs")), "engine vendored");
-must(fs.existsSync(path.join(root, ".claude", "skills", "ai-universal-memory", "SKILL.md")), "skill installed");
+test("engines_seen tracks distinct agents across mutators", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  m.log({ agent: "claude-code", summary: "did a thing" });
+  m.addDecision("use file-based memory", { agent: "codex" });
+  const state = readJson(path.join(root, ".memory", "state.json"));
+  assert.ok(state.engines_seen.includes("claude-code"));
+  assert.ok(state.engines_seen.includes("codex"));
+});
 
-const settings = JSON.parse(fs.readFileSync(path.join(root, ".claude", "settings.json"), "utf8"));
-must(
-  settings.hooks.SessionStart.some(g => g.hooks.some(h => h.command.includes("session-start.mjs"))),
-  "SessionStart hook wired"
-);
+test("brief respects brief_max_chars even with heavy input", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  for (let i = 0; i < 30; i++) m.log({ agent: "t", summary: "x".repeat(200) });
+  assert.ok(Array.from(m.brief()).length <= 900);
+});
 
-const checks = doctor(root);
-const failed = checks.filter(c => !c.ok);
-must(failed.length === 0, `doctor reports all green (${failed.map(f => f.name).join(", ") || "none failed"})`);
+test("truncate never mangles multi-byte code points (emoji stay intact)", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  const emoji = "🎉".repeat(500) + " end";
+  m.log({ agent: "t", summary: emoji });
+  const brief = m.brief();
+  // every codepoint that appears must be a full, valid emoji — no lone surrogates
+  assert.ok(!/�/.test(brief), "no replacement character from a broken surrogate pair");
+});
 
-// mergeBlock preserves unrelated content
-const custom = path.join(root, "CUSTOM.md");
-fs.writeFileSync(custom, "# My notes\n\nSomething important I wrote.\n");
-mergeBlock(custom, "<!-- ai-universal-memory:start -->\ninjected\n<!-- ai-universal-memory:end -->");
-const customContent = fs.readFileSync(custom, "utf8");
-must(customContent.includes("Something important I wrote."), "mergeBlock preserves existing content");
-must(customContent.includes("injected"), "mergeBlock adds the block");
+test("search finds facts, decisions, todos and events", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  m.addDecision("Use JWT over sessions", { agent: "t" });
+  m.addFact({ fact: "JWT secret lives in env", status: "confirmed", agent: "t" });
+  const hits = m.search("jwt");
+  assert.ok(hits.length >= 2);
+  assert.ok(hits.some(h => h.kind === "decision"));
+  assert.ok(hits.some(h => h.kind.startsWith("fact:")));
+});
 
-fs.rmSync(root, { recursive: true, force: true });
+test("search returns nothing for an empty term rather than everything", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  m.addDecision("something", { agent: "t" });
+  assert.deepEqual(m.search(""), []);
+});
 
-// --- bootstrap scan: a fresh init should never leave memory truly empty ---
+test("compact rotates old events into snapshots/ without deleting them", () => {
+  const root = tmpProject();
+  const m = new ProjectMemory(root);
+  m.init();
+  for (let i = 0; i < 10; i++) m.log({ agent: "t", summary: `evt ${i}` });
+  const before = m.lastEvents(1000).length;
+  const { rotated, kept } = m.compact({ keep: 2 });
+  assert.equal(kept, 2);
+  assert.equal(rotated, before - 2);
+  assert.equal(m.lastEvents(1000).length, 2);
+  const snapshots = fs.readdirSync(path.join(root, ".memory", "snapshots"));
+  assert.ok(snapshots.some(f => f.endsWith(".jsonl")));
+});
 
-const root2 = fs.mkdtempSync(path.join(os.tmpdir(), "aum-test-bootstrap-"));
-fs.writeFileSync(path.join(root2, "package.json"), JSON.stringify({
-  name: "demo-app",
-  version: "1.2.3",
-  description: "A demo app used only for testing the bootstrap scan.",
-  scripts: { build: "tsc", test: "node test.js" }
-}, null, 2));
-fs.writeFileSync(path.join(root2, "README.md"), "# Demo App\n\nThis app does the thing it's supposed to do, reliably.\n");
-fs.mkdirSync(path.join(root2, "nested-app"), { recursive: true });
-fs.writeFileSync(path.join(root2, "nested-app", "package.json"), JSON.stringify({ name: "nested-app" }, null, 2));
+test("20 concurrent writers (separate processes) lose nothing and leave valid JSON", async () => {
+  const root = tmpProject();
+  new ProjectMemory(root).init();
+  await Promise.all(
+    Array.from({ length: 20 }, (_, i) =>
+      new Promise((res, rej) =>
+        execFile("node", [BIN, "log", `evt ${i}`, "--agent", `a${i}`, "--path", root],
+          (err) => (err ? rej(err) : res()))
+      )
+    )
+  );
+  const lines = fs.readFileSync(path.join(root, ".memory", "events.jsonl"), "utf8").trim().split("\n");
+  assert.equal(lines.filter(l => l.includes('"summary":"evt ')).length, 20);
+  const state = readJson(path.join(root, ".memory", "state.json")); // must parse cleanly
+  assert.equal(new Set(state.engines_seen).size, state.engines_seen.length); // no dupes
+  for (let i = 0; i < 20; i++) assert.ok(state.engines_seen.includes(`a${i}`), `a${i} present`);
+});
 
-const memory2 = new ProjectMemory(root2);
-memory2.init({ projectName: "Bootstrap Test" });
-runBootstrap(memory2, root2);
+// --- bootstrap scan -----------------------------------------------------
 
-const facts2 = JSON.parse(fs.readFileSync(path.join(root2, ".memory", "facts.json"), "utf8"));
-const allFacts = [...facts2.confirmed, ...facts2.probable, ...facts2.needs_validation].map(f => f.fact);
+test("bootstrap scan seeds real facts on a fresh project", () => {
+  const root = tmpProject("aum-test-bootstrap-");
+  fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({
+    name: "demo-app",
+    version: "1.2.3",
+    description: "A demo app used only for testing the bootstrap scan.",
+    scripts: { build: "tsc", test: "node test.js" }
+  }, null, 2));
+  fs.writeFileSync(path.join(root, "README.md"), "# Demo App\n\nThis app does the thing it's supposed to do, reliably.\n");
+  fs.mkdirSync(path.join(root, "nested-app"));
+  fs.writeFileSync(path.join(root, "nested-app", "package.json"), JSON.stringify({ name: "nested-app" }, null, 2));
 
-must(allFacts.some(f => f.includes("demo-app@1.2.3")), "bootstrap captured root package.json name/version");
-must(allFacts.some(f => f.includes("build") && f.includes("test")), "bootstrap captured npm scripts");
-must(allFacts.some(f => f.includes("does the thing it's supposed to do")), "bootstrap captured README description");
-must(allFacts.some(f => f.includes("nested-app/package.json")), "bootstrap flagged the extra nested package.json");
-must(allFacts.some(f => f.toLowerCase().includes("no .git directory")), "bootstrap noted the missing git repo");
+  const m = new ProjectMemory(root);
+  m.init({ projectName: "Bootstrap Test" });
+  runBootstrap(m, root);
 
-const brief2 = memory2.brief();
-must(brief2.length <= 950, `bootstrapped brief still stays capped (${brief2.length} chars)`);
+  const facts = readJson(path.join(root, ".memory", "facts.json"));
+  const all = [...facts.confirmed, ...facts.probable, ...facts.needs_validation].map(f => f.fact);
 
-fs.rmSync(root2, { recursive: true, force: true });
+  assert.ok(all.some(f => f.includes("demo-app@1.2.3")));
+  assert.ok(all.some(f => f.includes("build") && f.includes("test")));
+  assert.ok(all.some(f => f.includes("does the thing it's supposed to do")));
+  assert.ok(all.some(f => f.includes("nested-app/package.json")));
+  assert.ok(all.some(f => f.toLowerCase().includes("no .git directory")));
+  assert.ok(Array.from(m.brief()).length <= 900);
+});
 
-console.log("\nAll good.");
+test("bootstrap scan flags a .git directory that isn't a real repo", () => {
+  const root = tmpProject("aum-test-brokengit-");
+  fs.mkdirSync(path.join(root, ".git"));
+  const m = new ProjectMemory(root);
+  m.init();
+  runBootstrap(m, root);
+  const risks = readJson(path.join(root, ".memory", "risks.json"));
+  assert.ok(risks.some(r => r.text.includes("not a valid, initialized git repository")));
+});
+
+// --- installers ---------------------------------------------------------
+
+test("mergeBlock preserves existing content and replaces only the marked block", () => {
+  const root = tmpProject();
+  const f = path.join(root, "CLAUDE.md");
+  fs.writeFileSync(f, "# My rules\nkeep this\n");
+  mergeBlock(f, "<!-- ai-universal-memory:start -->\nv1\n<!-- ai-universal-memory:end -->");
+  mergeBlock(f, "<!-- ai-universal-memory:start -->\nv2\n<!-- ai-universal-memory:end -->");
+  const out = fs.readFileSync(f, "utf8");
+  assert.ok(out.includes("keep this"));
+  assert.ok(out.includes("v2"));
+  assert.ok(!out.includes("v1"));
+});
+
+test("installAll block merge is idempotent — no duplicate blocks on re-install", () => {
+  const root = tmpProject();
+  new ProjectMemory(root).init();
+  installAll(root, { engines: ["claude", "agents", "cursor"] });
+  installAll(root, { engines: ["claude", "agents", "cursor"] });
+  const agentsMd = fs.readFileSync(path.join(root, "AGENTS.md"), "utf8");
+  assert.equal((agentsMd.match(/ai-universal-memory:start/g) || []).length, 1);
+});
+
+test("claude hook uses $CLAUDE_PROJECT_DIR, never an absolute path", () => {
+  const root = tmpProject();
+  installClaudeHook(root);
+  const settings = readJson(path.join(root, ".claude", "settings.json"));
+  const cmd = settings.hooks.SessionStart[0].hooks[0].command;
+  assert.ok(cmd.includes("$CLAUDE_PROJECT_DIR"));
+  assert.ok(!cmd.includes(root));
+});
+
+test("re-installing migrates an old absolute-path hook to the portable form", () => {
+  const root = tmpProject();
+  new ProjectMemory(root).init();
+  const settingsPath = path.join(root, ".claude", "settings.json");
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+  fs.writeFileSync(settingsPath, JSON.stringify({
+    hooks: { SessionStart: [{ hooks: [{ type: "command", command: `node "${root}/.memory/tools/session-start.mjs"` }] }] }
+  }, null, 2));
+  installClaudeHook(root);
+  const settings = readJson(settingsPath);
+  const cmd = settings.hooks.SessionStart[0].hooks[0].command;
+  assert.ok(cmd.includes("$CLAUDE_PROJECT_DIR"));
+  assert.ok(!cmd.includes(root));
+});
+
+test("doctor reports all green after a full install", () => {
+  const root = tmpProject();
+  new ProjectMemory(root).init();
+  installAll(root, { engines: ["claude", "agents", "cursor"] });
+  const checks = doctor(root);
+  const failed = checks.filter(c => !c.ok);
+  assert.deepEqual(failed, []);
+});

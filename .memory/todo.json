@@ -38,5 +38,21 @@
     "agent": "unknown",
     "created_at": "2026-07-10T00:10:08.558Z",
     "done_at": "2026-07-10T00:10:31.949Z"
+  },
+  {
+    "id": "mre87l4ia09l",
+    "text": "Render demo.gif with vhs on a machine where headless Chrome works, or find an alternative renderer",
+    "done": false,
+    "agent": "claude-code",
+    "created_at": "2026-07-10T00:57:30.546Z",
+    "done_at": null
+  },
+  {
+    "id": "mre87l6u8qb3",
+    "text": "Consider a GitHub social preview image (1280x640) — no reliable CLI/API path found, likely needs the web UI",
+    "done": false,
+    "agent": "claude-code",
+    "created_at": "2026-07-10T00:57:30.630Z",
+    "done_at": null
   }
 ]
