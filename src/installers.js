@@ -48,10 +48,6 @@ function writeJson(p, data) {
   fs.writeFileSync(p, JSON.stringify(data, null, 2) + "\n", "utf8");
 }
 
-function toSlash(p) {
-  return p.split(path.sep).join("/");
-}
-
 /** Merge a marked block into a file, preserving everything else. */
 export function mergeBlock(filePath, block) {
   const blockTrimmed = block.trim();
@@ -127,8 +123,11 @@ export function installClaudeHook(targetRoot) {
   const settingsPath = path.join(targetRoot, ".claude", "settings.json");
   const settings = readJson(settingsPath, {});
 
-  const hookScript = toSlash(path.join(targetRoot, ".memory", "tools", "session-start.mjs"));
-  const command = `node "${hookScript}"`;
+  // Portable across machines and across the team: this file gets committed
+  // to git, so it must never bake in an absolute path from whoever ran
+  // `aum init`. Claude Code expands $CLAUDE_PROJECT_DIR at hook-run time
+  // (session-start.mjs also reads it directly as a fallback for CLAUDE_PROJECT_DIR).
+  const command = `node "$CLAUDE_PROJECT_DIR/.memory/tools/session-start.mjs"`;
 
   settings.hooks = settings.hooks || {};
   settings.hooks.SessionStart = settings.hooks.SessionStart || [];
@@ -193,12 +192,15 @@ export function doctor(targetRoot) {
   checks.push({ name: ".claude/skills/ai-universal-memory/SKILL.md", ok: exists(path.join(targetRoot, ".claude", "skills", "ai-universal-memory", "SKILL.md")) });
 
   const settings = readJson(path.join(targetRoot, ".claude", "settings.json"), {});
-  const hookInstalled = Boolean(
-    settings.hooks &&
-    settings.hooks.SessionStart &&
-    settings.hooks.SessionStart.some(g => (g.hooks || []).some(h => (h.command || "").includes("session-start.mjs")))
-  );
-  checks.push({ name: ".claude/settings.json SessionStart hook", ok: hookInstalled });
+  const hookCmd = ((settings.hooks || {}).SessionStart || [])
+    .flatMap(g => g.hooks || [])
+    .map(h => h.command || "")
+    .find(c => c.includes("session-start.mjs")) || "";
+  checks.push({ name: ".claude/settings.json SessionStart hook", ok: Boolean(hookCmd) });
+  checks.push({
+    name: "SessionStart hook is portable ($CLAUDE_PROJECT_DIR, no absolute path)",
+    ok: hookCmd.includes("$CLAUDE_PROJECT_DIR")
+  });
 
   checks.push({ name: ".cursor/rules/ai-universal-memory.mdc", ok: exists(path.join(targetRoot, ".cursor", "rules", "ai-universal-memory.mdc")) });
 

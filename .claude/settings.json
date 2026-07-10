@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"D:/APPS E PROGRAMAS/UNIVERSAL MEMORY FOR AI/.memory/tools/session-start.mjs\""
+            "command": "node \"$CLAUDE_PROJECT_DIR/.memory/tools/session-start.mjs\""
           }
         ]
       }

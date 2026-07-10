@@ -64,32 +64,55 @@ async function main() {
     case "brief":
       console.log(memory.brief());
       break;
-    case "log":
-      memory.log({ agent: arg("--agent", "unknown"), action: arg("--action", "note"), status: arg("--status", "done"), summary: textFromArgs() });
+    case "log": {
+      const summary = textFromArgs();
+      if (!summary) { console.error("Nothing to log — pass a summary: cli.mjs log \"what happened\""); process.exit(1); }
+      memory.log({ agent: arg("--agent", "unknown"), action: arg("--action", "note"), status: arg("--status", "done"), summary });
       console.log("Logged.");
       break;
-    case "decision":
-      memory.addDecision(textFromArgs(), { agent: arg("--agent", "unknown") });
+    }
+    case "decision": {
+      const d = memory.addDecision(textFromArgs(), { agent: arg("--agent", "unknown") });
+      if (!d) { console.error("Nothing to save — pass decision text: cli.mjs decision \"...\""); process.exit(1); }
       console.log("Decision saved.");
       break;
-    case "todo":
-      { const t = memory.addTodo(textFromArgs(), { agent: arg("--agent", "unknown") }); console.log(`Todo saved (${t.id}).`); }
+    }
+    case "todo": {
+      const t = memory.addTodo(textFromArgs(), { agent: arg("--agent", "unknown") });
+      if (!t) { console.error("Nothing to save — pass todo text: cli.mjs todo \"...\""); process.exit(1); }
+      console.log(`Todo saved (${t.id}).`);
       break;
-    case "todo-done":
-      memory.completeTodo(args[1], { agent: arg("--agent", "unknown") });
-      console.log("Todo marked done.");
+    }
+    case "todo-done": {
+      const t = memory.completeTodo(args[1], { agent: arg("--agent", "unknown") });
+      if (!t) {
+        console.error(`Todo not found: ${args[1] || "(no id given)"}. Run: brief or read to see ids.`);
+        process.exit(1);
+      }
+      console.log(`Todo marked done (${t.id}).`);
       break;
-    case "risk":
-      { const r = memory.addRisk(textFromArgs(), { agent: arg("--agent", "unknown"), severity: arg("--severity", "medium") }); console.log(`Risk saved (${r.id}).`); }
+    }
+    case "risk": {
+      const r = memory.addRisk(textFromArgs(), { agent: arg("--agent", "unknown"), severity: arg("--severity", "medium") });
+      if (!r) { console.error("Nothing to save — pass risk text: cli.mjs risk \"...\""); process.exit(1); }
+      console.log(`Risk saved (${r.id}).`);
       break;
-    case "risk-resolve":
-      memory.resolveRisk(args[1], { agent: arg("--agent", "unknown") });
-      console.log("Risk resolved.");
+    }
+    case "risk-resolve": {
+      const r = memory.resolveRisk(args[1], { agent: arg("--agent", "unknown") });
+      if (!r) {
+        console.error(`Risk not found: ${args[1] || "(no id given)"}. Run: brief or read to see ids.`);
+        process.exit(1);
+      }
+      console.log(`Risk resolved (${r.id}).`);
       break;
-    case "fact":
-      memory.addFact({ fact: textFromArgs(), status: arg("--status", "needs_validation"), source: arg("--source", null), confidence: Number(arg("--confidence", "0.5")), agent: arg("--agent", "unknown") });
+    }
+    case "fact": {
+      const f = memory.addFact({ fact: textFromArgs(), status: arg("--status", "needs_validation"), source: arg("--source", null), confidence: Number(arg("--confidence", "0.5")), agent: arg("--agent", "unknown") });
+      if (!f) { console.error("Nothing to save — pass fact text: cli.mjs fact \"...\""); process.exit(1); }
       console.log("Fact saved.");
       break;
+    }
     case "handoff":
       memory.generateHandoff();
       console.log("Handoff updated: .memory/handoff.md");

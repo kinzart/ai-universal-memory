@@ -49,7 +49,7 @@ That's the gap this project fills.
 
 ```
 .memory/
-  BRIEF.md          ← capped digest (~700 chars), always current
+  BRIEF.md          ← capped digest (~900 chars), always current
   handoff.md         ← full status: state, pending work, risks, facts
   state.json          ← status/phase pointer
   facts.json           ← confirmed / probable / needs_validation, with sources
@@ -75,8 +75,9 @@ comments):
 ### Why this never burns tokens
 
 The only thing read *automatically* is `BRIEF.md` — capped at ~900
-characters (roughly 150–220 tokens): current status, last summary, top
-pending items, top risks, last few events. Full history
+characters (roughly 150–220 tokens, configurable via
+`.memory/config.json`'s `brief_max_chars`): current status, last
+summary, top pending items, top risks, last few events. Full history
 (`events.jsonl`, `handoff.md`) is always available but never force-fed —
 an agent reads it only when it decides it actually needs more depth.
 

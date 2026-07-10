@@ -13,12 +13,15 @@ import {
   ListResourcesRequestSchema,
   ReadResourceRequestSchema
 } from "@modelcontextprotocol/sdk/types.js";
+import { readFileSync } from "node:fs";
 import { ProjectMemory } from "../src/core.js";
+
+const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 
 const memory = new ProjectMemory(process.env.CLAUDE_PROJECT_DIR || process.cwd());
 
 const server = new Server(
-  { name: "ai-universal-memory", version: "0.1.0" },
+  { name: "ai-universal-memory", version: pkg.version },
   { capabilities: { tools: {}, resources: {} } }
 );
 
@@ -65,7 +68,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["fact"]
       }
     },
-    { name: "memory_handoff", description: "Regenerate the full handoff document.", inputSchema: { type: "object", properties: {} } }
+    { name: "memory_handoff", description: "Regenerate the full handoff document.", inputSchema: { type: "object", properties: {} } },
+    {
+      name: "memory_todo_done",
+      description: "Mark a pending task as done by id.",
+      inputSchema: { type: "object", properties: { id: { type: "string" }, agent: { type: "string" } }, required: ["id"] }
+    },
+    {
+      name: "memory_risk_resolve",
+      description: "Resolve an open risk by id.",
+      inputSchema: { type: "object", properties: { id: { type: "string" }, agent: { type: "string" } }, required: ["id"] }
+    }
   ]
 }));
 
@@ -80,20 +93,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case "memory_log":
       memory.log({ agent: a.agent || "mcp-agent", action: a.action || "note", status: a.status || "done", summary: a.summary });
       return text("Logged.");
-    case "memory_decision":
-      memory.addDecision(a.text, { agent: a.agent || "mcp-agent" });
-      return text("Decision saved.");
+    case "memory_decision": {
+      const d = memory.addDecision(a.text, { agent: a.agent || "mcp-agent" });
+      return text(d ? "Decision saved." : "Nothing to save — text was empty.");
+    }
     case "memory_todo": {
       const t = memory.addTodo(a.text, { agent: a.agent || "mcp-agent" });
-      return text(`Todo saved (${t.id}).`);
+      return text(t ? `Todo saved (${t.id}).` : "Nothing to save — text was empty.");
+    }
+    case "memory_todo_done": {
+      const t = memory.completeTodo(a.id, { agent: a.agent || "mcp-agent" });
+      return text(t ? `Todo marked done (${t.id}).` : `Todo not found: ${a.id}`);
     }
     case "memory_risk": {
       const r = memory.addRisk(a.text, { agent: a.agent || "mcp-agent", severity: a.severity || "medium" });
-      return text(`Risk saved (${r.id}).`);
+      return text(r ? `Risk saved (${r.id}).` : "Nothing to save — text was empty.");
     }
-    case "memory_fact":
-      memory.addFact({ fact: a.fact, status: a.status || "needs_validation", source: a.source || null, confidence: a.confidence ?? 0.5, agent: a.agent || "mcp-agent" });
-      return text("Fact saved.");
+    case "memory_risk_resolve": {
+      const r = memory.resolveRisk(a.id, { agent: a.agent || "mcp-agent" });
+      return text(r ? `Risk resolved (${r.id}).` : `Risk not found: ${a.id}`);
+    }
+    case "memory_fact": {
+      const f = memory.addFact({ fact: a.fact, status: a.status || "needs_validation", source: a.source || null, confidence: a.confidence ?? 0.5, agent: a.agent || "mcp-agent" });
+      return text(f ? "Fact saved." : "Nothing to save — fact was empty.");
+    }
     case "memory_handoff":
       return text(memory.generateHandoff());
     default:

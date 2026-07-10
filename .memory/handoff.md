@@ -7,14 +7,14 @@
 
 - Status: done
 - Phase: setup
-- Last updated: 2026-07-10T00:10:32.052Z
+- Last updated: 2026-07-10T00:41:33.215Z
 - Last agent: claude-code
-- Last action: note
+- Last action: todo_done
 - Engines seen on this project: ai-universal-memory, claude-code
 
 ## Last Summary
 
-Closed duplicate todo mre6io8e79f8 (accidental re-add) — original is mre3wgs83gpu, still open.
+Executed MISSAO-AUM-v0.3.md phase P0 (6 confirmed bugs from external audit of v0.2.0): portable SessionStart hook via $CLAUDE_PROJECT_DIR with auto-migration of old installs, todo-done/risk-resolve now exit 1 on unknown id instead of lying, atomic writeJson + mkdir-based cross-process lock around every mutator (verified with 20 concurrent writers, zero lost events), touchSummary flag so fact/todo/risk/decision no longer clobber state.last_summary, MCP server version now reads package.json + gained memory_todo_done/memory_risk_resolve tools, README 700/900 char inconsistency fixed. All P0 acceptance criteria pass.
 
 ## Pending Work (2)
 
@@ -40,8 +40,6 @@ Closed duplicate todo mre6io8e79f8 (accidental re-add) — original is mre3wgs83
 ## Latest Events
 
 ```jsonl
-{"time":"2026-07-09T22:56:52.693Z","agent":"claude-code","action":"decision","status":"done","summary":"Vendor the engine into .memory/tools/ of every target project (not just depend on the npm package), so memory keeps working offline and forever, even without ai-universal-memory installed.","next":[],"error":null}
-{"time":"2026-07-09T22:56:52.782Z","agent":"claude-code","action":"decision","status":"done","summary":"Automatic context injection uses a capped ~900 char BRIEF.md via a Claude Code SessionStart hook, not the full history, to keep token cost near zero on every session start.","next":[],"error":null}
 {"time":"2026-07-09T22:56:52.881Z","agent":"claude-code","action":"decision","status":"done","summary":"AGENTS.md/CLAUDE.md/.claude/settings.json are merged via marker comments / JSON merge, never overwritten, so existing project instructions and hooks survive re-installs.","next":[],"error":null}
 {"time":"2026-07-09T22:56:52.974Z","agent":"claude-code","action":"fact","status":"done","summary":"npm package name 'ai-universal-memory' was unclaimed as of 2026-07-09.","next":[],"error":null}
 {"time":"2026-07-09T22:56:53.063Z","agent":"claude-code","action":"todo","status":"done","summary":"Create the GitHub repo kinzartmusica/ai-universal-memory and push","next":[],"error":null}
@@ -60,6 +58,8 @@ Closed duplicate todo mre6io8e79f8 (accidental re-add) — original is mre3wgs83
 {"time":"2026-07-10T00:10:08.651Z","agent":"claude-code","action":"release","status":"done","summary":"Published and verified ai-universal-memory@0.2.0 end-to-end from the public npm registry: fresh npx install auto-scans a synthetic project and correctly seeds package/README/structure/git facts with no manual logging needed.","next":[],"error":null}
 {"time":"2026-07-10T00:10:31.951Z","agent":"claude-code","action":"todo_done","status":"done","summary":"Add more engine installers: Windsurf, Zed, JetBrains AI Assistant","next":[],"error":null}
 {"time":"2026-07-10T00:10:32.052Z","agent":"claude-code","action":"note","status":"done","summary":"Closed duplicate todo mre6io8e79f8 (accidental re-add) — original is mre3wgs83gpu, still open.","next":[],"error":null}
+{"time":"2026-07-10T00:41:33.118Z","agent":"claude-code","action":"fix","status":"done","summary":"Executed MISSAO-AUM-v0.3.md phase P0 (6 confirmed bugs from external audit of v0.2.0): portable SessionStart hook via $CLAUDE_PROJECT_DIR with auto-migration of old installs, todo-done/risk-resolve now exit 1 on unknown id instead of lying, atomic writeJson + mkdir-based cross-process lock around every mutator (verified with 20 concurrent writers, zero lost events), touchSummary flag so fact/todo/risk/decision no longer clobber state.last_summary, MCP server version now reads package.json + gained memory_todo_done/memory_risk_resolve tools, README 700/900 char inconsistency fixed. All P0 acceptance criteria pass.","next":[],"error":null}
+{"time":"2026-07-10T00:41:33.215Z","agent":"claude-code","action":"todo_done","status":"done","summary":"Add more engine installers: Windsurf, Zed, JetBrains AI Assistant","next":[],"error":null}
 ```
 
 ## Full History

@@ -37,8 +37,55 @@ function readJson(file, fallback) {
   }
 }
 
+// Atomic write: never leave a half-written JSON file on disk if the
+// process dies mid-write. Same-filesystem rename is atomic on every OS
+// Node supports.
 function writeJson(file, data) {
-  write(file, JSON.stringify(data, null, 2) + "\n");
+  ensureDir(path.dirname(file));
+  const tmp = `${file}.${process.pid}.${Math.random().toString(36).slice(2, 6)}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2) + "\n", "utf8");
+  fs.renameSync(tmp, file);
+}
+
+// Cross-process mutex via mkdir, which is atomic-exclusive on every OS —
+// no dependency needed. Guards read-modify-write races on state.json and
+// friends when multiple agents/subagents touch the same project at once.
+const LOCK_STALE_MS = 10_000;
+
+function sleepSync(ms) {
+  // Atomics.wait blocks the calling thread for real (Node allows this on
+  // the main thread, unlike browsers) — a real sleep, not a busy loop.
+  const sab = new Int32Array(new SharedArrayBuffer(4));
+  Atomics.wait(sab, 0, 0, ms);
+}
+
+function withLock(memoryDir, fn, { retries = 100, delayMs = 25 } = {}) {
+  ensureDir(memoryDir); // parent must exist before we can mkdir the lock inside it
+  const lockDir = path.join(memoryDir, ".lock");
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      fs.mkdirSync(lockDir);
+      try {
+        return fn();
+      } finally {
+        fs.rmSync(lockDir, { recursive: true, force: true });
+      }
+    } catch (err) {
+      if (err.code !== "EEXIST") throw err;
+      try {
+        const age = Date.now() - fs.statSync(lockDir).mtimeMs;
+        if (age > LOCK_STALE_MS) {
+          fs.rmSync(lockDir, { recursive: true, force: true }); // steal a lock left by a crashed process
+          continue;
+        }
+      } catch {
+        // lock vanished between our check and now — just retry
+      }
+      sleepSync(delayMs);
+    }
+  }
+  throw new Error(`Could not acquire .memory lock after ${retries} attempts.`);
 }
 
 function newId() {
@@ -88,61 +135,74 @@ export class ProjectMemory {
   }
 
   init({ projectName } = {}) {
-    ensureDir(this.dir);
-    ensureDir(this.evidenceDir);
-    ensureDir(this.snapshotsDir);
+    return withLock(this.dir, () => {
+      ensureDir(this.dir);
+      ensureDir(this.evidenceDir);
+      ensureDir(this.snapshotsDir);
 
-    if (!exists(this.configFile)) {
-      writeJson(this.configFile, {
-        schema_version: SCHEMA_VERSION,
-        project_name: projectName || path.basename(this.root),
-        created_at: new Date().toISOString(),
-        brief_max_chars: 900,
-        brief_max_events: 5,
-        brief_max_pending: 5,
-        brief_max_risks: 3
-      });
-    }
+      if (!exists(path.join(this.dir, ".gitignore"))) {
+        write(path.join(this.dir, ".gitignore"), ".lock/\n");
+      }
 
-    if (!exists(this.stateFile)) {
-      writeJson(this.stateFile, {
-        status: "initialized",
-        current_phase: "setup",
-        last_agent: null,
-        last_action: "init",
-        last_summary: "Project memory initialized.",
-        last_updated: new Date().toISOString(),
-        engines_seen: []
-      });
-    }
+      if (!exists(this.configFile)) {
+        writeJson(this.configFile, {
+          schema_version: SCHEMA_VERSION,
+          project_name: projectName || path.basename(this.root),
+          created_at: new Date().toISOString(),
+          brief_max_chars: 900,
+          brief_max_events: 5,
+          brief_max_pending: 5,
+          brief_max_risks: 3
+        });
+      }
 
-    if (!exists(this.factsFile)) {
-      writeJson(this.factsFile, { confirmed: [], probable: [], needs_validation: [] });
-    }
-    if (!exists(this.decisionsJsonFile)) writeJson(this.decisionsJsonFile, []);
-    if (!exists(this.todoJsonFile)) writeJson(this.todoJsonFile, []);
-    if (!exists(this.risksJsonFile)) writeJson(this.risksJsonFile, []);
-    if (!exists(this.eventsFile)) write(this.eventsFile, "");
-    if (!exists(this.decisionsMdFile)) write(this.decisionsMdFile, "# Decisions\n\n");
-    if (!exists(this.todoMdFile)) write(this.todoMdFile, "# Todo\n\n");
-    if (!exists(this.risksMdFile)) write(this.risksMdFile, "# Risks\n\n");
+      if (!exists(this.stateFile)) {
+        writeJson(this.stateFile, {
+          status: "initialized",
+          current_phase: "setup",
+          last_agent: null,
+          last_action: "init",
+          last_summary: "Project memory initialized.",
+          last_updated: new Date().toISOString(),
+          engines_seen: []
+        });
+      }
 
-    const isFirstInit = !exists(this.handoffFile);
-    if (isFirstInit) {
-      this.log({
-        agent: "ai-universal-memory",
-        action: "init",
-        status: "done",
-        summary: "Project memory initialized."
-      });
-    } else {
-      this._regenerateDerived();
-    }
+      if (!exists(this.factsFile)) {
+        writeJson(this.factsFile, { confirmed: [], probable: [], needs_validation: [] });
+      }
+      if (!exists(this.decisionsJsonFile)) writeJson(this.decisionsJsonFile, []);
+      if (!exists(this.todoJsonFile)) writeJson(this.todoJsonFile, []);
+      if (!exists(this.risksJsonFile)) writeJson(this.risksJsonFile, []);
+      if (!exists(this.eventsFile)) write(this.eventsFile, "");
+      if (!exists(this.decisionsMdFile)) write(this.decisionsMdFile, "# Decisions\n\n");
+      if (!exists(this.todoMdFile)) write(this.todoMdFile, "# Todo\n\n");
+      if (!exists(this.risksMdFile)) write(this.risksMdFile, "# Risks\n\n");
+
+      const isFirstInit = !exists(this.handoffFile);
+      if (isFirstInit) {
+        this._logUnlocked({
+          agent: "ai-universal-memory",
+          action: "init",
+          status: "done",
+          summary: "Project memory initialized."
+        });
+      } else {
+        this._regenerateDerived();
+      }
+    });
   }
 
   // ---- events / state ----------------------------------------------------
 
-  log({ agent = "unknown", action = "note", status = "done", summary = "", next = [], error = null }) {
+  log(entry) {
+    return withLock(this.dir, () => this._logUnlocked(entry));
+  }
+
+  // Only call this while already holding the lock (from within a withLock
+  // callback) — it never acquires one itself, to avoid deadlocking against
+  // the non-reentrant mkdir-based mutex.
+  _logUnlocked({ agent = "unknown", action = "note", status = "done", summary = "", next = [], error = null, touchSummary = true }) {
     ensureDir(this.dir);
 
     const event = {
@@ -161,24 +221,32 @@ export class ProjectMemory {
     const enginesSeen = new Set(state.engines_seen || []);
     if (agent && agent !== "unknown") enginesSeen.add(agent);
 
-    writeJson(this.stateFile, {
+    const patch = {
       ...state,
-      status,
       last_agent: agent,
       last_action: action,
-      last_summary: summary,
       last_updated: event.time,
       engines_seen: Array.from(enginesSeen)
-    });
+    };
+    // Only real work ("note", the default action, and "init") should own
+    // the headline status/last_summary — registering a fact/todo/risk/
+    // decision shouldn't make it look like that was "the last thing done".
+    if (touchSummary) {
+      patch.status = status;
+      patch.last_summary = summary;
+    }
+    writeJson(this.stateFile, patch);
 
     this._regenerateDerived();
     return event;
   }
 
   setPhase(phase) {
-    const state = readJson(this.stateFile, {});
-    writeJson(this.stateFile, { ...state, current_phase: phase, last_updated: new Date().toISOString() });
-    this._regenerateDerived();
+    return withLock(this.dir, () => {
+      const state = readJson(this.stateFile, {});
+      writeJson(this.stateFile, { ...state, current_phase: phase, last_updated: new Date().toISOString() });
+      this._regenerateDerived();
+    });
   }
 
   lastEvents(limit = 30) {
@@ -196,13 +264,15 @@ export class ProjectMemory {
 
   addDecision(text, { agent = "unknown" } = {}) {
     if (!text) return null;
-    const decisions = readJson(this.decisionsJsonFile, []);
-    const item = { id: newId(), text, agent, created_at: new Date().toISOString() };
-    decisions.push(item);
-    writeJson(this.decisionsJsonFile, decisions);
-    this._renderDecisionsMd(decisions);
-    this.log({ agent, action: "decision", summary: text });
-    return item;
+    return withLock(this.dir, () => {
+      const decisions = readJson(this.decisionsJsonFile, []);
+      const item = { id: newId(), text, agent, created_at: new Date().toISOString() };
+      decisions.push(item);
+      writeJson(this.decisionsJsonFile, decisions);
+      this._renderDecisionsMd(decisions);
+      this._logUnlocked({ agent, action: "decision", summary: text, touchSummary: false });
+      return item;
+    });
   }
 
   _renderDecisionsMd(decisions) {
@@ -216,25 +286,29 @@ export class ProjectMemory {
 
   addTodo(text, { agent = "unknown" } = {}) {
     if (!text) return null;
-    const todos = readJson(this.todoJsonFile, []);
-    const item = { id: newId(), text, done: false, agent, created_at: new Date().toISOString(), done_at: null };
-    todos.push(item);
-    writeJson(this.todoJsonFile, todos);
-    this._renderTodoMd(todos);
-    this.log({ agent, action: "todo", summary: text });
-    return item;
+    return withLock(this.dir, () => {
+      const todos = readJson(this.todoJsonFile, []);
+      const item = { id: newId(), text, done: false, agent, created_at: new Date().toISOString(), done_at: null };
+      todos.push(item);
+      writeJson(this.todoJsonFile, todos);
+      this._renderTodoMd(todos);
+      this._logUnlocked({ agent, action: "todo", summary: text, touchSummary: false });
+      return item;
+    });
   }
 
   completeTodo(id, { agent = "unknown" } = {}) {
-    const todos = readJson(this.todoJsonFile, []);
-    const item = todos.find(t => t.id === id);
-    if (!item) return null;
-    item.done = true;
-    item.done_at = new Date().toISOString();
-    writeJson(this.todoJsonFile, todos);
-    this._renderTodoMd(todos);
-    this.log({ agent, action: "todo_done", summary: item.text });
-    return item;
+    return withLock(this.dir, () => {
+      const todos = readJson(this.todoJsonFile, []);
+      const item = todos.find(t => t.id === id);
+      if (!item) return null;
+      item.done = true;
+      item.done_at = new Date().toISOString();
+      writeJson(this.todoJsonFile, todos);
+      this._renderTodoMd(todos);
+      this._logUnlocked({ agent, action: "todo_done", summary: item.text, touchSummary: false });
+      return item;
+    });
   }
 
   _renderTodoMd(todos) {
@@ -256,25 +330,29 @@ export class ProjectMemory {
 
   addRisk(text, { agent = "unknown", severity = "medium" } = {}) {
     if (!text) return null;
-    const risks = readJson(this.risksJsonFile, []);
-    const item = { id: newId(), text, severity, agent, resolved: false, created_at: new Date().toISOString(), resolved_at: null };
-    risks.push(item);
-    writeJson(this.risksJsonFile, risks);
-    this._renderRisksMd(risks);
-    this.log({ agent, action: "risk", summary: text });
-    return item;
+    return withLock(this.dir, () => {
+      const risks = readJson(this.risksJsonFile, []);
+      const item = { id: newId(), text, severity, agent, resolved: false, created_at: new Date().toISOString(), resolved_at: null };
+      risks.push(item);
+      writeJson(this.risksJsonFile, risks);
+      this._renderRisksMd(risks);
+      this._logUnlocked({ agent, action: "risk", summary: text, touchSummary: false });
+      return item;
+    });
   }
 
   resolveRisk(id, { agent = "unknown" } = {}) {
-    const risks = readJson(this.risksJsonFile, []);
-    const item = risks.find(r => r.id === id);
-    if (!item) return null;
-    item.resolved = true;
-    item.resolved_at = new Date().toISOString();
-    writeJson(this.risksJsonFile, risks);
-    this._renderRisksMd(risks);
-    this.log({ agent, action: "risk_resolved", summary: item.text });
-    return item;
+    return withLock(this.dir, () => {
+      const risks = readJson(this.risksJsonFile, []);
+      const item = risks.find(r => r.id === id);
+      if (!item) return null;
+      item.resolved = true;
+      item.resolved_at = new Date().toISOString();
+      writeJson(this.risksJsonFile, risks);
+      this._renderRisksMd(risks);
+      this._logUnlocked({ agent, action: "risk_resolved", summary: item.text, touchSummary: false });
+      return item;
+    });
   }
 
   _renderRisksMd(risks) {
@@ -296,14 +374,16 @@ export class ProjectMemory {
 
   addFact({ fact, status = "needs_validation", source = null, confidence = 0.5, agent = "unknown" }) {
     if (!fact) return null;
-    const facts = readJson(this.factsFile, { confirmed: [], probable: [], needs_validation: [] });
-    const item = { id: newId(), fact, source, confidence, agent, created_at: new Date().toISOString() };
+    return withLock(this.dir, () => {
+      const facts = readJson(this.factsFile, { confirmed: [], probable: [], needs_validation: [] });
+      const item = { id: newId(), fact, source, confidence, agent, created_at: new Date().toISOString() };
 
-    const bucket = ["confirmed", "probable", "needs_validation"].includes(status) ? status : "needs_validation";
-    facts[bucket].push(item);
-    writeJson(this.factsFile, facts);
-    this.log({ agent, action: "fact", summary: fact });
-    return item;
+      const bucket = ["confirmed", "probable", "needs_validation"].includes(status) ? status : "needs_validation";
+      facts[bucket].push(item);
+      writeJson(this.factsFile, facts);
+      this._logUnlocked({ agent, action: "fact", summary: fact, touchSummary: false });
+      return item;
+    });
   }
 
   // ---- derived views -------------------------------------------------------
