@@ -2,9 +2,9 @@
   "status": "done",
   "current_phase": "setup",
   "last_agent": "claude-code",
-  "last_action": "todo_done",
-  "last_summary": "Executed MISSAO-AUM-v0.3.md phase P0 (6 confirmed bugs from external audit of v0.2.0): portable SessionStart hook via $CLAUDE_PROJECT_DIR with auto-migration of old installs, todo-done/risk-resolve now exit 1 on unknown id instead of lying, atomic writeJson + mkdir-based cross-process lock around every mutator (verified with 20 concurrent writers, zero lost events), touchSummary flag so fact/todo/risk/decision no longer clobber state.last_summary, MCP server version now reads package.json + gained memory_todo_done/memory_risk_resolve tools, README 700/900 char inconsistency fixed. All P0 acceptance criteria pass.",
-  "last_updated": "2026-07-10T00:41:33.215Z",
+  "last_action": "feature",
+  "last_summary": "Executed MISSAO-AUM-v0.3.md phase P1: aum search across events/facts/decisions/todos/risks (CLI + MCP), aum compact rotating old events.jsonl into snapshots/ without deleting anything, and unicode-safe truncate (code points, not UTF-16 units) so emoji don't get mangled in BRIEF.md. Updated README roadmap and CHANGELOG.",
+  "last_updated": "2026-07-10T00:44:52.056Z",
   "engines_seen": [
     "ai-universal-memory",
     "claude-code"

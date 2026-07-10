@@ -100,6 +100,11 @@ package installed.
   npx ai-universal-memory fact "fact text" --status confirmed --source "..." --agent "..."
   npx ai-universal-memory handoff
   npx ai-universal-memory last [n]
+  npx ai-universal-memory search "term" [--limit 25]
+      Search events, facts, decisions, todos and risks for a term.
+  npx ai-universal-memory compact [--keep 200]
+      Rotate old events.jsonl entries into .memory/snapshots/ (nothing
+      is deleted, just moved out of the way — still auditable).
 
   npx ai-universal-memory mcp
       Start an MCP server exposing memory as tools/resources (requires
@@ -245,6 +250,24 @@ async function main() {
     case "last":
       console.log(memory.lastEvents(Number(args[1] || 30)).map(e => JSON.stringify(e)).join("\n"));
       break;
+    case "search": {
+      const term = textFromArgs();
+      const results = memory.search(term, { limit: Number(flag("--limit", "25")) });
+      if (!results.length) {
+        console.log(`No matches for "${term}".`);
+        break;
+      }
+      for (const r of results) {
+        const id = r.id ? ` (${r.id})` : "";
+        console.log(`[${r.kind}]${id} ${String(r.time).slice(0, 16)} ${r.agent} — ${r.text}`);
+      }
+      break;
+    }
+    case "compact": {
+      const { rotated, kept } = memory.compact({ keep: Number(flag("--keep", "200")) });
+      console.log(`Rotated ${rotated} event(s) to .memory/snapshots/, kept ${kept}.`);
+      break;
+    }
     case "mcp": {
       try {
         await import("../mcp/server.js");

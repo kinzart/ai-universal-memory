@@ -7,14 +7,14 @@
 
 - Status: done
 - Phase: setup
-- Last updated: 2026-07-10T00:41:33.215Z
+- Last updated: 2026-07-10T00:44:52.056Z
 - Last agent: claude-code
-- Last action: todo_done
+- Last action: feature
 - Engines seen on this project: ai-universal-memory, claude-code
 
 ## Last Summary
 
-Executed MISSAO-AUM-v0.3.md phase P0 (6 confirmed bugs from external audit of v0.2.0): portable SessionStart hook via $CLAUDE_PROJECT_DIR with auto-migration of old installs, todo-done/risk-resolve now exit 1 on unknown id instead of lying, atomic writeJson + mkdir-based cross-process lock around every mutator (verified with 20 concurrent writers, zero lost events), touchSummary flag so fact/todo/risk/decision no longer clobber state.last_summary, MCP server version now reads package.json + gained memory_todo_done/memory_risk_resolve tools, README 700/900 char inconsistency fixed. All P0 acceptance criteria pass.
+Executed MISSAO-AUM-v0.3.md phase P1: aum search across events/facts/decisions/todos/risks (CLI + MCP), aum compact rotating old events.jsonl into snapshots/ without deleting anything, and unicode-safe truncate (code points, not UTF-16 units) so emoji don't get mangled in BRIEF.md. Updated README roadmap and CHANGELOG.
 
 ## Pending Work (2)
 
@@ -40,7 +40,6 @@ Executed MISSAO-AUM-v0.3.md phase P0 (6 confirmed bugs from external audit of v0
 ## Latest Events
 
 ```jsonl
-{"time":"2026-07-09T22:56:52.881Z","agent":"claude-code","action":"decision","status":"done","summary":"AGENTS.md/CLAUDE.md/.claude/settings.json are merged via marker comments / JSON merge, never overwritten, so existing project instructions and hooks survive re-installs.","next":[],"error":null}
 {"time":"2026-07-09T22:56:52.974Z","agent":"claude-code","action":"fact","status":"done","summary":"npm package name 'ai-universal-memory' was unclaimed as of 2026-07-09.","next":[],"error":null}
 {"time":"2026-07-09T22:56:53.063Z","agent":"claude-code","action":"todo","status":"done","summary":"Create the GitHub repo kinzartmusica/ai-universal-memory and push","next":[],"error":null}
 {"time":"2026-07-09T22:56:53.161Z","agent":"claude-code","action":"todo","status":"done","summary":"Publish 0.1.0 to npm (npm publish --access public) once repo is pushed","next":[],"error":null}
@@ -60,6 +59,7 @@ Executed MISSAO-AUM-v0.3.md phase P0 (6 confirmed bugs from external audit of v0
 {"time":"2026-07-10T00:10:32.052Z","agent":"claude-code","action":"note","status":"done","summary":"Closed duplicate todo mre6io8e79f8 (accidental re-add) — original is mre3wgs83gpu, still open.","next":[],"error":null}
 {"time":"2026-07-10T00:41:33.118Z","agent":"claude-code","action":"fix","status":"done","summary":"Executed MISSAO-AUM-v0.3.md phase P0 (6 confirmed bugs from external audit of v0.2.0): portable SessionStart hook via $CLAUDE_PROJECT_DIR with auto-migration of old installs, todo-done/risk-resolve now exit 1 on unknown id instead of lying, atomic writeJson + mkdir-based cross-process lock around every mutator (verified with 20 concurrent writers, zero lost events), touchSummary flag so fact/todo/risk/decision no longer clobber state.last_summary, MCP server version now reads package.json + gained memory_todo_done/memory_risk_resolve tools, README 700/900 char inconsistency fixed. All P0 acceptance criteria pass.","next":[],"error":null}
 {"time":"2026-07-10T00:41:33.215Z","agent":"claude-code","action":"todo_done","status":"done","summary":"Add more engine installers: Windsurf, Zed, JetBrains AI Assistant","next":[],"error":null}
+{"time":"2026-07-10T00:44:52.056Z","agent":"claude-code","action":"feature","status":"done","summary":"Executed MISSAO-AUM-v0.3.md phase P1: aum search across events/facts/decisions/todos/risks (CLI + MCP), aum compact rotating old events.jsonl into snapshots/ without deleting anything, and unicode-safe truncate (code points, not UTF-16 units) so emoji don't get mangled in BRIEF.md. Updated README roadmap and CHANGELOG.","next":[],"error":null}
 ```
 
 ## Full History

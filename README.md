@@ -134,6 +134,8 @@ npx ai-universal-memory install [--engines claude,agents,cursor]   # re-sync int
 npx ai-universal-memory doctor [--fix]                              # check what's wired up
 npx ai-universal-memory brief | read | context
 npx ai-universal-memory log | decision | todo | todo-done | risk | risk-resolve | fact | handoff | last
+npx ai-universal-memory search "term" [--limit 25]                   # search events/facts/decisions/todos/risks
+npx ai-universal-memory compact [--keep 200]                          # rotate old events into .memory/snapshots/
 npx ai-universal-memory mcp                                          # optional MCP server
 ```
 
@@ -144,9 +146,10 @@ current directory.
 
 For MCP-capable clients (Claude Desktop, others), `npx ai-universal-memory mcp`
 exposes `memory_brief`, `memory_read`, `memory_log`, `memory_decision`,
-`memory_todo`, `memory_risk`, `memory_fact`, `memory_handoff` as tools.
-This is an extra integration point — the primary workflow (hook +
-CLAUDE.md/AGENTS.md + Skill) already works without it.
+`memory_todo`, `memory_todo_done`, `memory_risk`, `memory_risk_resolve`,
+`memory_fact`, `memory_search`, `memory_handoff` as tools. This is an
+extra integration point — the primary workflow (hook + CLAUDE.md/
+AGENTS.md + Skill) already works without it.
 
 ## Using it in a new or existing project
 
@@ -164,8 +167,6 @@ travel with the project across machines, engines and people.
 
 ## Roadmap
 
-- `aum search` over events/facts
-- snapshot/diff between two points in time
 - evidence attachments linked to facts/decisions
 - VS Code extension, dashboard
 - more engine installers (Windsurf, Zed, JetBrains AI)

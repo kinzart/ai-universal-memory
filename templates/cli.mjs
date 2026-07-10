@@ -45,6 +45,8 @@ function help() {
   node .memory/tools/cli.mjs fact "text" --status confirmed --source "..." --agent "name"
   node .memory/tools/cli.mjs handoff            regenerate handoff.md
   node .memory/tools/cli.mjs last [n]
+  node .memory/tools/cli.mjs search "term" [--limit 25]
+  node .memory/tools/cli.mjs compact [--keep 200]
 `);
 }
 
@@ -120,6 +122,24 @@ async function main() {
     case "last":
       console.log(memory.lastEvents(Number(args[1] || 30)).map(e => JSON.stringify(e)).join("\n"));
       break;
+    case "search": {
+      const term = textFromArgs();
+      const results = memory.search(term, { limit: Number(arg("--limit", "25")) });
+      if (!results.length) {
+        console.log(`No matches for "${term}".`);
+        break;
+      }
+      for (const r of results) {
+        const id = r.id ? ` (${r.id})` : "";
+        console.log(`[${r.kind}]${id} ${String(r.time).slice(0, 16)} ${r.agent} — ${r.text}`);
+      }
+      break;
+    }
+    case "compact": {
+      const { rotated, kept } = memory.compact({ keep: Number(arg("--keep", "200")) });
+      console.log(`Rotated ${rotated} event(s) to .memory/snapshots/, kept ${kept}.`);
+      break;
+    }
     default:
       console.log(`Unknown command: ${cmd}`);
       help();

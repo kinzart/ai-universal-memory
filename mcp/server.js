@@ -78,6 +78,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       name: "memory_risk_resolve",
       description: "Resolve an open risk by id.",
       inputSchema: { type: "object", properties: { id: { type: "string" }, agent: { type: "string" } }, required: ["id"] }
+    },
+    {
+      name: "memory_search",
+      description: "Search events, facts, decisions, todos and risks for a term.",
+      inputSchema: { type: "object", properties: { term: { type: "string" }, limit: { type: "number" } }, required: ["term"] }
     }
   ]
 }));
@@ -119,6 +124,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     case "memory_handoff":
       return text(memory.generateHandoff());
+    case "memory_search": {
+      const results = memory.search(a.term, { limit: a.limit || 25 });
+      if (!results.length) return text(`No matches for "${a.term}".`);
+      return text(results.map(r => `[${r.kind}]${r.id ? ` (${r.id})` : ""} ${String(r.time).slice(0, 16)} ${r.agent} — ${r.text}`).join("\n"));
+    }
     default:
       return text("Unknown tool.");
   }
