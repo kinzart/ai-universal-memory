@@ -2,6 +2,7 @@
 
 - [ ] (mre3wgs83gpu) Add more engine installers: Windsurf, Zed, JetBrains AI Assistant
 - [ ] (mre3wguf40lh) Consider aum search / snapshot diff commands
+- [ ] (mre6io8e79f8) Add more engine installers: Windsurf, Zed, JetBrains AI Assistant
 
 ## Done
 

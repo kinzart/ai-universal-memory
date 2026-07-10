@@ -7,19 +7,20 @@
 
 - Status: done
 - Phase: setup
-- Last updated: 2026-07-10T00:04:48.295Z
+- Last updated: 2026-07-10T00:10:08.651Z
 - Last agent: claude-code
-- Last action: decision
+- Last action: release
 - Engines seen on this project: ai-universal-memory, claude-code
 
 ## Last Summary
 
-Keep bootstrap.mjs package-only (not vendored into target projects) since only 'aum init' calls it and the vendored local CLI has no init command — avoids adding unused code to every project's .memory/tools/.
+Published and verified ai-universal-memory@0.2.0 end-to-end from the public npm registry: fresh npx install auto-scans a synthetic project and correctly seeds package/README/structure/git facts with no manual logging needed.
 
-## Pending Work (2)
+## Pending Work (3)
 
 - [ ] (mre3wgs83gpu) Add more engine installers: Windsurf, Zed, JetBrains AI Assistant
 - [ ] (mre3wguf40lh) Consider aum search / snapshot diff commands
+- [ ] (mre6io8e79f8) Add more engine installers: Windsurf, Zed, JetBrains AI Assistant
 
 ## Open Risks (0)
 
@@ -58,6 +59,8 @@ Keep bootstrap.mjs package-only (not vendored into target projects) since only '
 {"time":"2026-07-09T23:52:36.040Z","agent":"claude-code","action":"validation","status":"done","summary":"Real-world validation: installed on a second, unrelated project (Agente de Produção Artística) via npx from the public registry. First session logged real facts/risks/todos about that codebase; a completely fresh third session recalled all of it via the SessionStart hook + AGENTS.md/CLAUDE.md, with no re-exploration of the code. Confirms cross-session, low-token handoff works end-to-end in practice, not just in the smoke test.","next":[],"error":null}
 {"time":"2026-07-10T00:04:48.189Z","agent":"claude-code","action":"feature","status":"done","summary":"Added templates/bootstrap.mjs: a one-time local project scan on first init (package.json, README, top-level structure, git status) that seeds real facts/risks/todos instead of leaving memory empty on day one. Reproduced and verified it catches the exact 'empty .git' issue found on the Agente de Produção Artística test.","next":[],"error":null}
 {"time":"2026-07-10T00:04:48.295Z","agent":"claude-code","action":"decision","status":"done","summary":"Keep bootstrap.mjs package-only (not vendored into target projects) since only 'aum init' calls it and the vendored local CLI has no init command — avoids adding unused code to every project's .memory/tools/.","next":[],"error":null}
+{"time":"2026-07-10T00:10:08.559Z","agent":"unknown","action":"todo","status":"done","summary":"Add more engine installers: Windsurf, Zed, JetBrains AI Assistant","next":[],"error":null}
+{"time":"2026-07-10T00:10:08.651Z","agent":"claude-code","action":"release","status":"done","summary":"Published and verified ai-universal-memory@0.2.0 end-to-end from the public npm registry: fresh npx install auto-scans a synthetic project and correctly seeds package/README/structure/git facts with no manual logging needed.","next":[],"error":null}
 ```
 
 ## Full History

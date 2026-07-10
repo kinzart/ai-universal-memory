@@ -2,9 +2,9 @@
   "status": "done",
   "current_phase": "setup",
   "last_agent": "claude-code",
-  "last_action": "decision",
-  "last_summary": "Keep bootstrap.mjs package-only (not vendored into target projects) since only 'aum init' calls it and the vendored local CLI has no init command — avoids adding unused code to every project's .memory/tools/.",
-  "last_updated": "2026-07-10T00:04:48.295Z",
+  "last_action": "release",
+  "last_summary": "Published and verified ai-universal-memory@0.2.0 end-to-end from the public npm registry: fresh npx install auto-scans a synthetic project and correctly seeds package/README/structure/git facts with no manual logging needed.",
+  "last_updated": "2026-07-10T00:10:08.651Z",
   "engines_seen": [
     "ai-universal-memory",
     "claude-code"
