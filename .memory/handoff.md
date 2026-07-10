@@ -7,14 +7,14 @@
 
 - Status: done
 - Phase: setup
-- Last updated: 2026-07-10T01:30:26.660Z
+- Last updated: 2026-07-10T01:34:15.829Z
 - Last agent: claude-code
-- Last action: feature
+- Last action: release
 - Engines seen on this project: ai-universal-memory, claude-code
 
 ## Last Summary
 
-Executed the P1.0 delta from the updated mission file: zero-LLM auto-capture via PostToolUse/Stop hooks (auto-capture.mjs, session-stop.mjs), engine appendEvent()/regenerate() primitives, aum auto on|off|status, --no-auto-capture flag, dedupe of consecutive identical edits, brief filtering of auto events. Plus README additions: claude-mem vs this comparison table, and 'progressive disclosure: three layers' terminology applied consistently across README/.memory/README.md/claude-block.md/agents-block.md/SKILL.md. 26/26 tests passing. Bumped to 0.4.0.
+Published and verified ai-universal-memory@0.4.0 end-to-end: CI green on all 9 os/node combos, npm publish with provenance succeeded via CI, and a fresh npx install from the public registry correctly wires auto-capture (PostToolUse/Stop hooks) alongside everything from 0.1-0.3.
 
 ## Pending Work (4)
 
@@ -42,7 +42,6 @@ Executed the P1.0 delta from the updated mission file: zero-LLM auto-capture via
 ## Latest Events
 
 ```jsonl
-{"time":"2026-07-09T23:21:39.241Z","agent":"claude-code","action":"note","status":"done","summary":"Corrected GitHub username from placeholder kinzartmusica to actual authenticated account kinzart across package.json, LICENSE and .memory/","next":[],"error":null}
 {"time":"2026-07-09T23:24:53.076Z","agent":"claude-code","action":"note","status":"done","summary":"Fixed package.json bin paths (npm was silently dropping bin entries with a leading ./ prefix during publish) via npm pkg fix","next":[],"error":null}
 {"time":"2026-07-09T23:36:53.826Z","agent":"claude-code","action":"note","status":"done","summary":"Published ai-universal-memory@0.1.0 to npm and verified npx ai-universal-memory init works end-to-end from the public registry (fresh tmp dir, all doctor checks green).","next":[],"error":null}
 {"time":"2026-07-09T23:36:59.786Z","agent":"claude-code","action":"todo_done","status":"done","summary":"Create the GitHub repo kinzart/ai-universal-memory and push","next":[],"error":null}
@@ -62,6 +61,7 @@ Executed the P1.0 delta from the updated mission file: zero-LLM auto-capture via
 {"time":"2026-07-10T00:57:30.632Z","agent":"claude-code","action":"todo","status":"done","summary":"Consider a GitHub social preview image (1280x640) — no reliable CLI/API path found, likely needs the web UI","next":[],"error":null}
 {"time":"2026-07-10T01:12:05.133Z","agent":"claude-code","action":"fix","status":"done","summary":"CI's first real run caught a genuine bug on windows-latest+node18: writeJson's atomic rename could throw EPERM under concurrent writes (Windows Defender/handle-release quirk, not a locking bug). Fixed with a short retry-with-backoff around fs.renameSync for EPERM/EBUSY/EACCES, plus a regression test that mocks fs.renameSync to fail twice then succeed. Shipping as 0.3.1.","next":[],"error":null}
 {"time":"2026-07-10T01:30:26.660Z","agent":"claude-code","action":"feature","status":"done","summary":"Executed the P1.0 delta from the updated mission file: zero-LLM auto-capture via PostToolUse/Stop hooks (auto-capture.mjs, session-stop.mjs), engine appendEvent()/regenerate() primitives, aum auto on|off|status, --no-auto-capture flag, dedupe of consecutive identical edits, brief filtering of auto events. Plus README additions: claude-mem vs this comparison table, and 'progressive disclosure: three layers' terminology applied consistently across README/.memory/README.md/claude-block.md/agents-block.md/SKILL.md. 26/26 tests passing. Bumped to 0.4.0.","next":[],"error":null}
+{"time":"2026-07-10T01:34:15.829Z","agent":"claude-code","action":"release","status":"done","summary":"Published and verified ai-universal-memory@0.4.0 end-to-end: CI green on all 9 os/node combos, npm publish with provenance succeeded via CI, and a fresh npx install from the public registry correctly wires auto-capture (PostToolUse/Stop hooks) alongside everything from 0.1-0.3.","next":[],"error":null}
 ```
 
 ## Full History
